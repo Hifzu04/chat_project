@@ -3,6 +3,8 @@ import React from 'react'
 function Home() {
     return (
         <div className="card w-96 bg-base-100 shadow-sm">
+            
+            
             <div className="card-body">
                 <span className="badge badge-xs badge-warning">Most Popular</span>
                 <div className="flex justify-between">
