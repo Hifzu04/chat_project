@@ -5,9 +5,7 @@ package middleware
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -21,16 +19,7 @@ import (
 
 // JWTSecret is the secret key used to sign JWT tokens.
 // In production, store this in an environment variable or secrets manager.
-var JWTSecret []byte
-
-func init() {
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		log.Fatal("JWT_SECRET environment variable is not set")
-	}
-	JWTSecret = []byte(secret)
-
-}
+var JWTSecret = []byte("your_jwt_secret_key_here")
 
 // Claims defines the structure of JWT claims used in this app.
 // It includes the user’s ID and standard registered claims.

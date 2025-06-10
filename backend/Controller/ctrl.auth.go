@@ -13,6 +13,7 @@ import (
 	utils "chat-backend/Utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	middleware "chat-backend/Middleware"
@@ -43,7 +44,7 @@ type LoginResponse struct {
 }
 
 // Signup handles user registration.
-// Steps:              
+// Steps:
 // 1. Parse incoming JSON.
 // 2. Check if email already exists.
 // 3. Hash password.
@@ -92,6 +93,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to create user", http.StatusInternalServerError)
 		return
 	}
+	//take the case : all field are necessary and password must be atleast 6 char.
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
@@ -135,7 +137,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Generate JWT token (expires in 24 hours)
-	tokenString, err := middleware.GenerateToken(user.ID, time.Hour*24)
+	tokenString, err := middleware.GenerateToken(user.ID, time.Hour*48)
 	if err != nil {
 		http.Error(w, "Failed to generate token", http.StatusInternalServerError)
 		return
@@ -169,4 +171,30 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
+}
+
+//check auth
+
+// CheckAuthResponse is the payload returned when auth succeeds.
+type CheckAuthResponse struct {
+	UserID  string `json:"user_id"`
+	Message string `json:"message"`
+}
+
+// CheckAuth simply verifies that the middleware ran, and echoes back the userID.
+func CheckAuth(w http.ResponseWriter, r *http.Request) {
+	// 1) Pull the userID from context (set by Authenticate middleware)
+	val := r.Context().Value("userID")
+	id, ok := val.(primitive.ObjectID)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// 2) Return a simple JSON with the userID
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(CheckAuthResponse{
+		UserID:  id.Hex(),
+		Message: "You are authenticated",
+	})
 }
