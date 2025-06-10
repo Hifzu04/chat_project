@@ -2,8 +2,10 @@ package main
 
 import (
 	config "chat-backend/Config"
+	routes "chat-backend/Routes"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -21,7 +23,7 @@ func main() {
 	config.ConnectDB()
 
 	//router
-	///router := routes.RegisterRoutes()
+	router := routes.RegisterRoutes()
 
 	//port
 	port := os.Getenv("PORT")
@@ -30,6 +32,6 @@ func main() {
 		port = "8000"
 	}
 	fmt.Printf("server is listening on : %s\n", port)
-	
-	//log.Fatal(http.ListenAndServe(":"+port, router))
+
+	log.Fatal(http.ListenAndServe(":"+port, router))
 }
