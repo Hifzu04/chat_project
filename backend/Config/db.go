@@ -52,6 +52,8 @@ func ConnectDB() {
 
 	DBClient = client
 	fmt.Printf("Using database: %s\n", DBName)
+
+	
 }
 
 func GetCollection(name string) *mongo.Collection {

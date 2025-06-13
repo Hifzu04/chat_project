@@ -11,8 +11,10 @@ import (
 
 	config "chat-backend/Config"
 	models "chat-backend/Models"
+	utils "chat-backend/Utils"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -25,7 +27,7 @@ type UserListItem struct {
 }
 
 // GetAllUsers returns a list of all registered users (excluding passwords).
-//only if the user is logged in . in routes GET /users (protected by your Authenticate middleware) returns:
+// only if the user is logged in . in routes GET /users (protected by your Authenticate middleware) returns:
 // Protected by JWT middleware.
 func GetAllUsersForSidebar(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -70,4 +72,113 @@ func GetAllUsersForSidebar(w http.ResponseWriter, r *http.Request) {
 
 	// 4) Return the JSON list
 	json.NewEncoder(w).Encode(list)
+}
+
+func SendMessage(w http.ResponseWriter, r *http.Request) {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+     //http.request has prebuilt context 
+	senderID, ok := r.Context().Value("userID").(primitive.ObjectID)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	// Parse form-data for text + images
+	err := r.ParseMultipartForm(10 << 20) // 10MB
+	if err != nil {
+		http.Error(w, "Invalid form data", http.StatusBadRequest)
+		return
+	}
+
+	receiverIDHex := r.FormValue("receiver_id")
+	receiverID, err := primitive.ObjectIDFromHex(receiverIDHex)
+	if err != nil {
+		http.Error(w, "Invalid receiver ID", http.StatusBadRequest)
+		return
+	}
+
+	text := r.FormValue("text")
+
+	// Handle multiple image uploads
+	var imageURLs []string
+	files := r.MultipartForm.File["images"]
+	for _, fh := range files {
+		file, err := fh.Open()
+		if err != nil {
+			continue
+		}
+		defer file.Close()
+
+		// Convert multipart.File to io.Reader
+		uploadedURL, err := utils.UploadToCloudinary(file, fh)
+		if err != nil {
+			log.Println("Cloudinary error:", err)
+			continue
+		}
+		imageURLs = append(imageURLs, uploadedURL)
+	}
+	// Save to DB
+	msg := models.Message{
+		SenderID:   senderID,
+		ReceiverID: receiverID,
+		Text:       text,
+		Images:     imageURLs,
+		CreatedAt:  time.Now(),
+	}
+
+	collection := config.GetCollection(models.CollectionNameMessage)
+	_, err = collection.InsertOne(ctx, msg)
+	if err != nil {
+		http.Error(w, "DB error", http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode(map[string]string{"message": "Message sent"})
+}
+
+
+
+
+
+// Get messages between two users
+func GetMessages(w http.ResponseWriter, r *http.Request) {
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+
+    userID, ok := r.Context().Value("userID").(primitive.ObjectID)
+    if !ok {
+        http.Error(w, "Unauthorized", http.StatusUnauthorized)
+        return
+    }
+
+    receiverIDHex := r.URL.Query().Get("user_id")
+    receiverID, err := primitive.ObjectIDFromHex(receiverIDHex)
+    if err != nil {
+        http.Error(w, "Invalid receiver ID", http.StatusBadRequest)
+        return
+    }
+
+    filter := bson.M{
+        "$or": []bson.M{
+            {"sender_id": userID, "receiver_id": receiverID},
+            {"sender_id": receiverID, "receiver_id": userID},
+        },
+    }
+
+    coll := config.GetCollection(models.CollectionNameMessage)
+    cursor, err := coll.Find(ctx, filter)
+    if err != nil {
+        http.Error(w, "DB error", http.StatusInternalServerError)
+        return
+    }
+    defer cursor.Close(ctx)
+
+    var messages []models.Message
+    if err := cursor.All(ctx, &messages); err != nil {
+        http.Error(w, "Decode error", http.StatusInternalServerError)
+        return
+    }
+
+    json.NewEncoder(w).Encode(messages)
 }

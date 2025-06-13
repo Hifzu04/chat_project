@@ -48,8 +48,8 @@ func RegisterRoutes() *mux.Router {
 	//user for sidebar
 	authRouter.HandleFunc("/users", controllers.GetAllUsersForSidebar).Methods("GET")
 
-	// authRouter.HandleFunc("/messages/send", controllers.SendMessage).Methods("POST")
-	// authRouter.HandleFunc("/messages/{userID}", controllers.GetMessages).Methods("GET")
+	 authRouter.HandleFunc("/messages/send", controllers.SendMessage).Methods("POST")
+	 authRouter.HandleFunc("/messages/{userID}", controllers.GetMessages).Methods("GET")
 
 	// A simple health check endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
