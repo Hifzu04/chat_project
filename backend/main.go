@@ -22,6 +22,7 @@ func main() {
 	//connect to mongodb , read mongodb uri
 	config.ConnectDB()
 
+	
 	//router
 	router := routes.RegisterRoutes()
 

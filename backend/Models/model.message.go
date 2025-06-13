@@ -22,5 +22,7 @@ type Message struct {
     CreatedAt  time.Time            `bson:"created_at" json:"created_at"`
 }
 
+
+
 // CollectionNameMessage is the MongoDB collection name for chat messages.
 const CollectionNameMessage = "messages"
