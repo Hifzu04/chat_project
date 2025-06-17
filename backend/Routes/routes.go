@@ -37,19 +37,19 @@ func RegisterRoutes() *mux.Router {
 	authRouter.Use(middleware.Authenticate)
 
 	// User-related
-                    
+
 	//update prof
 	authRouter.HandleFunc("/user/update", controllers.UpdateProfile).Methods("PUT")
 	//check auth
-	authRouter.HandleFunc("/auth/check", controllers.CheckAuth).Methods("GET")
+	router.HandleFunc("/auth/check", controllers.CheckAuth).Methods("GET")
 
 	// // Message-related
 
 	//user for sidebar
 	authRouter.HandleFunc("/users", controllers.GetAllUsersForSidebar).Methods("GET")
 
-	 authRouter.HandleFunc("/messages/send", controllers.SendMessage).Methods("POST")
-	 authRouter.HandleFunc("/messages/{userID}", controllers.GetMessages).Methods("GET")
+	authRouter.HandleFunc("/messages/send", controllers.SendMessage).Methods("POST")
+	authRouter.HandleFunc("/messages/{userID}", controllers.GetMessages).Methods("GET")
 
 	// A simple health check endpoint
 	router.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
