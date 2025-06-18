@@ -7,31 +7,34 @@ import Profile from "./Pages/Profile";
 import Setting from "./Pages/Setting";
 import Navbar from "./Components/Navbar";
 import { Loader } from 'lucide-react';
-import { useEffect } from "react";
+import { useEffect } from "react";                                
 import {useAuthStore} from "./Store/useAuthStore"
+import { Toaster } from "react-hot-toast";
 
 
 
 export default function App() {
   const {checkAuth, authUser , isCheckingAuth} = useAuthStore();
 
-  // useEffect (() => {
-  //   checkAuth();
-  // },[checkAuth])
 
-  console.log(authUser);
+  // //when we will refresh the page , checkAuth will check whether user is loggedIn. 
+  //  useEffect (() => {
+  //    checkAuth();
+  //  },[checkAuth])
+
+  // console.log({authUser});
 
 
   
      
-// // //loader when the user is not logged in (//loader rounding from lucide react)
-//    if(!authUser && isCheckingAuth){
-//     return(
-//       <div className="flex items-center justify-center h-screen ">
-//         <Loader className="size-10 animate-spin"/>
-//       </div>
-//     )
-//    }
+//  //loader when the user is not logged in (//loader rounding from lucide react)
+//  if(!authUser && isCheckingAuth)
+//   return(
+//     <div className="flex items-center justify-center h-screen ">
+//       <Loader className="size-10 animate-spin"/>
+//     </div>
+//   )
+ 
 
 
   return (
@@ -47,10 +50,9 @@ export default function App() {
         <Route path="/setting" element={<Setting />} />
       </Routes>
 
-    </div>
+    
 
+    <Toaster/>
+  </div>
   );
-}
-
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(<App />);
+};
