@@ -10,11 +10,11 @@ export const axiosInstance = axios.create({
     
 
     //if error : check using baseurl  baseURL: "http://localhost:5001",
-    withCredentials: true
+    withCredentials: true,
 })
 
 
 //baseURL: All requests made using this instance will be prefixed with http://localhost:5001/api.
 
 //withCredentials: true: Allows cookies and authorization headers to be sent along with requests
-// (useful for sessions or JWT stored in cookies).
+// (useful for sessions or JWT stored in cookies).  

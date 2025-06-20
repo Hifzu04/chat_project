@@ -45,6 +45,32 @@ export const useAuthStore = create((set) => ({
         }finally{
            set({isSigningup:false});
         }
+    },
+
+    //login 
+    login:async (data)=> {
+       set({isLoggingin:true})
+       try{
+          const res = await axiosInstance.post("/login" , data);
+          set({authUser: res.data});
+          toast.success("Loggedin sucessfully");    
+       } catch (error) {
+           console.log("some thing went wrong while logging in ")
+           const message = error.response?.data?.message || error.message || "something went wrong"
+           toast.error(message)
+       }finally{
+        set({isLoggingin:false})
+       }
+    },
+
+    logout: async () =>  {
+       try{
+        await axiosInstance.post("/logout");
+        set({authUser : null});
+        toast.success("logged out sucessfully")
+       }catch (error){
+        toast.error(error.response.data.message)
+       }
     }
 
 }))
