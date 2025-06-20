@@ -42,7 +42,7 @@ export default function Signup() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* {left panel} */}
-      <div className="w-full  md:w-1/2 flex items-center justify-center p-8 bg-white">
+      <div className="w-full  md:w-1/2 flex items-center justify-center p-8 bg-base-200">
 
         <div className="max-w-md w-full space-y-6">
 
@@ -50,13 +50,13 @@ export default function Signup() {
           <div className="flex justify-center">
             <img src={Meetme} alt="App Logo" className="h-12 w-auto" />
           </div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-extrabold ">
             Create your account
           </h2>
 
           <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium ">
                 Full Name
               </label>
               <input
@@ -70,7 +70,7 @@ export default function Signup() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium">
                 Email address
               </label>
               <input
@@ -84,7 +84,7 @@ export default function Signup() {
               />
             </div>
             <div className="relative">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium ">
                 Password
               </label>
               <input
@@ -123,7 +123,7 @@ export default function Signup() {
           </form>
 
 
-          <p className="mt-4 text-center text-sm text-gray-800">
+          <p className="mt-4 text-center text-sm ">
             Already registered?{' '}
             <Link to="/login" className="link link-primary ">
               Go to login
@@ -137,11 +137,11 @@ export default function Signup() {
       {/* Right panel */}
       <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8">
         <div className="max-w-lg text-center space-y-6 ">
-         <blockquote className='text-8xl  font-bold text '>
-          GiggleTalk
+         <blockquote className='text-8xl  font-bold '>
+           ChatterNest
          </blockquote>
           <blockquote className="text-xl italic font-light ">
-            “Pop in, say hi, and keep the convo rolling!" ☕💬
+            “Pop in, say hi, and keep the convo rolling!" ☕💬    
             {/* <footer className="mt-4 text-sm">— Steve Jobs</footer> */}
           </blockquote>
         </div>
