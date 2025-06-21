@@ -137,10 +137,10 @@ export default function Signup() {
       {/* Right panel */}
       <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8">
         <div className="max-w-lg text-center space-y-6 ">
-         <blockquote className='text-8xl  font-bold '>
-           ChatterNest
+         <blockquote className='text-9xl  font-bold '>
+           ChatNest
          </blockquote>
-          <blockquote className="text-xl italic font-light ">
+          <blockquote className="text-lg italic  ">
             “Pop in, say hi, and keep the convo rolling!" ☕💬    
             {/* <footer className="mt-4 text-sm">— Steve Jobs</footer> */}
           </blockquote>

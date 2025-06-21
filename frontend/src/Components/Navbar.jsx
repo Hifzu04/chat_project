@@ -28,7 +28,7 @@ function Navbar() {
         </div>
       </div>
       <div className="navbar-center  ">
-        <Link to={"/"} className="btn btn-ghost text-xl">ChatterNest</Link>
+        <Link to={"/"} className="btn btn-ghost text-xl">ChatNest</Link>
       </div>
 
       {authUser && (
