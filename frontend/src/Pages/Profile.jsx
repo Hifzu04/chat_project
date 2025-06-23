@@ -5,23 +5,25 @@ import { Camera, Mail, User } from 'lucide-react';
 
 function Profile() {
   const { updateProfile, isUpdatingProfile, authUser } = useAuthStore();
-  const [selectedImage , setSelectedImage] = useState();
+  const [selectedImage, setSelectedImage] = useState();
 
   const handleImageUpload = async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
+    const file = e.target.files[0];
+    if (!file) return;
 
-      const reader = new FileReader;
-      reader.readAsDataURL(file);
+    // 1) keep a preview URL
+    const previewURL = URL.createObjectURL(file);
+    setSelectedImage(previewURL);
 
-      reader.onload = async () => { 
-        const base64image = reader.result;
-        setSelectedImage(base64image)
-        await updateProfile({Profile_pic :base64image})
-      }
-      
+    // 2) build FormData
+    const form = new FormData();
+    form.append("profilePic", file);
+
+    // 3) call store with FormData
+    await updateProfile(form);
+
   }
-  console.log(authUser.ProfilePic);
+  // console.log(authUser.profile_pic);
 
 
   return (
@@ -39,7 +41,7 @@ function Profile() {
             <div className='relative' >
               <img
                 //checkfordebugging .profilepic
-                src={selectedImage|| authUser.ProfilePic || Profile_pic}
+                src={selectedImage || authUser.profile_pic || Profile_pic}
                 alt='profilepic'
                 className='rounded-full border-4  object-cover size-32  '
               />
@@ -91,7 +93,11 @@ function Profile() {
             <div className='space-y-3 text-sm '>
               <div className='flex items-center justify-between py-2 border-b border-zinc-700' >
                 <span>Member Since</span>
-                <span>{authUser.createdAt?.split("T")[0]}</span>
+                <span>
+                  {new Date(authUser.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric", month: "short", year: "numeric"
+                  })}
+                </span>
               </div>
               <div className="flex items-center justify-between py-2">
                 <span>Account Status</span>

@@ -41,7 +41,7 @@ func RegisterRoutes() *mux.Router {
 	//update prof
 	authRouter.HandleFunc("/user/update", controllers.UpdateProfile).Methods("PUT")
 	//check auth
-	router.HandleFunc("/auth/check", controllers.CheckAuth).Methods("GET")
+	authRouter.HandleFunc("/auth/check", controllers.CheckAuth).Methods("GET")
 
 	// // Message-related
 

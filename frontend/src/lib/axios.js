@@ -11,7 +11,7 @@ export const axiosInstance = axios.create({
 
     //if error : check using baseurl  baseURL: "http://localhost:5001",
     withCredentials: true,
-})
+})  
 
 
 //baseURL: All requests made using this instance will be prefixed with http://localhost:5001/api.

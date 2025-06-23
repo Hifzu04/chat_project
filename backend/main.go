@@ -27,20 +27,11 @@ func main() {
 	router := routes.RegisterRoutes()
 
 	//handling cors error , when connecting with FE.
-
 	c := cors.New(cors.Options{
-		// Change this to your React dev origin(s)
-		AllowedOrigins: []string{"http://localhost:5173"},
-		AllowedMethods: []string{
-			http.MethodGet,
-			http.MethodPost,
-			http.MethodPut,
-			http.MethodDelete,
-			http.MethodOptions,
-		},
-		AllowedHeaders:   []string{"*"},
+		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
-		MaxAge:           600,
 	})
 	handler := c.Handler(router)
 

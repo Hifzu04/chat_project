@@ -5,6 +5,7 @@ import Meetme from '../assets/Meetme.png'
 import { Link } from 'react-router-dom';
 
 import { useAuthStore } from '../Store/useAuthStore';
+import { useNavigate } from "react-router-dom";
 
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ import toast, { Toaster } from 'react-hot-toast';
 
 
 function Login() {
+      const navigate = useNavigate();
     const [showPassword , setShowPassword] = useState(false);
     const [formData, setFormData] = useState({
         email: "",
@@ -21,19 +23,16 @@ function Login() {
 
     const { login, isLoggingin } = useAuthStore();
 
-    const validateLogin = () => {
-       
-        return true;
-    };
 
     const handleSubmit = async  (e) => {
        e.preventDefault();
 
-        const sucess = validateLogin();
+        const sucess = await login(formData);
 
-        if (sucess===true){
-               login(formData)
-        }
+        // if (sucess){
+        //     navigate("/");   
+               
+        // }
 
     }
 
