@@ -39,8 +39,10 @@ type LoginRequest struct {
 }
 
 // LoginResponse defines the JSON payload returned after successful login.
+
 type LoginResponse struct {
-	Token string `json:"token"`
+	Token string      `json:"token"`
+	User  models.User `json:"user"`
 }
 
 // Signup handles user registration.
@@ -85,6 +87,7 @@ func Signup(w http.ResponseWriter, r *http.Request) {
 		FullName:   req.FullName,
 		Password:   hashedPwd,
 		ProfilePic: req.ProfilePic,
+		CreatedAt:  time.Now(), // Set the current time as CreatedAt
 	}
 
 	// Insert into MongoDB
@@ -147,14 +150,21 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
+		Secure:   false,
 		Expires:  time.Now().Add(24 * time.Hour),
 		HttpOnly: true,
 		Path:     "/",
 	})
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(LoginResponse{Token: tokenString})
+	json.NewEncoder(w).Encode(struct {
+		Token string      `json:"token"`
+		User  models.User `json:"user"`
+	}{
+		Token: tokenString,
+		User:  user,
+	})
+
 }
 
 // Logout clears the JWT cookie on the client side.
@@ -175,26 +185,25 @@ func Logout(w http.ResponseWriter, r *http.Request) {
 
 //check auth
 
-// CheckAuthResponse is the payload returned when auth succeeds.
-type CheckAuthResponse struct {
-	UserID  string `json:"user_id"`
-	Message string `json:"message"`
-}
-
 // CheckAuth simply verifies that the middleware ran, and echoes back the userID.
 func CheckAuth(w http.ResponseWriter, r *http.Request) {
 	// 1) Pull the userID from context (set by Authenticate middleware)
 	val := r.Context().Value("userID")
-	id, ok := val.(primitive.ObjectID)
+	userID, ok := val.(primitive.ObjectID)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
 		return
 	}
-
+	//fetch the full user from database
+	usersColl := config.GetCollection(models.CollectionNameUser)
+	var user models.User
+	err := usersColl.FindOne(context.Background(), bson.M{"_id": userID}).Decode(&user)
+	if err != nil {
+		http.Error(w, "user not found", http.StatusUnauthorized)
+		return
+	}
 	// 2) Return a simple JSON with the userID
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(CheckAuthResponse{
-		UserID:  id.Hex(),
-		Message: "You are authenticated",
-	})
+	json.NewEncoder(w).Encode(user)
+
 }

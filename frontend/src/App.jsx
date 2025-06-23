@@ -22,22 +22,23 @@ export default function App() {
 
 
   //when we will refresh the page , checkAuth will check whether user is loggedIn. 
-  //   useEffect (() => {
-  //     checkAuth();
-  //   },[checkAuth]) 
-  //  console.log({authUser});
+     useEffect (() => {
+       checkAuth();
+     },[checkAuth]) 
+
+     
+    console.log({authUser});
 
 
 
 
-  //  //loader when the user is not logged in (//loader rounding from lucide react)
-  //  if(!authUser && isCheckingAuth)
-  //   return(
-  //     <div className="flex items-center justify-center h-screen ">
-  //       <Loader className="size-10 animate-spin"/>
-  //     </div>
-  //   )
-
+ //loader when the user is not logged in (//loader rounding from lucide react)
+ if(!authUser && isCheckingAuth)
+  return(
+    <div className="flex items-center justify-center h-screen ">
+      <Loader className="size-10 animate-spin"/>
+    </div>
+  )
 
 
 
