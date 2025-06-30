@@ -1,7 +1,7 @@
 //import meetme from '.../assets/meetme.png'
 import  { useState } from 'react';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
-import Meetme from '../assets/Meetme.png'
+// import Meetme from '../assets/Meetme.png'
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { useAuthStore } from '../Store/useAuthStore';
@@ -48,7 +48,7 @@ export default function Signup() {
 
           {/* logo */}
           <div className="flex justify-center">
-            <img src={Meetme} alt="App Logo" className="h-12 w-auto" />
+            <img src={"/Meetme.png"} alt="App Logo" className="h-12 w-auto" />
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold ">
             Create your account

@@ -13,6 +13,7 @@ import (
 	models "chat-backend/Models"
 	utils "chat-backend/Utils"
 
+	"github.com/gorilla/mux"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -77,7 +78,7 @@ func GetAllUsersForSidebar(w http.ResponseWriter, r *http.Request) {
 func SendMessage(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-     //http.request has prebuilt context 
+	//http.request has prebuilt context
 	senderID, ok := r.Context().Value("userID").(primitive.ObjectID)
 	if !ok {
 		http.Error(w, "Unauthorized", http.StatusUnauthorized)
@@ -128,57 +129,74 @@ func SendMessage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	collection := config.GetCollection(models.CollectionNameMessage)
-	_, err = collection.InsertOne(ctx, msg)
+	insertRes, err := collection.InsertOne(ctx, msg)
 	if err != nil {
 		http.Error(w, "DB error", http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"message": "Message sent"})
+	msg.ID = insertRes.InsertedID.(primitive.ObjectID)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(msg)
 }
 
-
-
-
-
 // Get messages between two users
+// and the user whose ID is in the path: GET /messages/{userID}
 func GetMessages(w http.ResponseWriter, r *http.Request) {
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
+	w.Header().Set("Content-Type", "application/json")
 
-    userID, ok := r.Context().Value("userID").(primitive.ObjectID)
-    if !ok {
-        http.Error(w, "Unauthorized", http.StatusUnauthorized)
-        return
-    }
+	// 1) Extract the receiverID from the path
+	vars := mux.Vars(r)
+	receiverIDHex, ok := vars["userID"]
+	if !ok {
+		http.Error(w, "Missing userID in path", http.StatusBadRequest)
+		return
+	}
+	receiverID, err := primitive.ObjectIDFromHex(receiverIDHex)
+	if err != nil {
+		http.Error(w, "Invalid receiver ID", http.StatusBadRequest)
+		return
+	}
 
-    receiverIDHex := r.URL.Query().Get("user_id")
-    receiverID, err := primitive.ObjectIDFromHex(receiverIDHex)
-    if err != nil {
-        http.Error(w, "Invalid receiver ID", http.StatusBadRequest)
-        return
-    }
+	// 2) Get the authenticated userID from the request context
+	userIDVal := r.Context().Value("userID")
+	senderID, ok := userIDVal.(primitive.ObjectID)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
 
-    filter := bson.M{
-        "$or": []bson.M{
-            {"sender_id": userID, "receiver_id": receiverID},
-            {"sender_id": receiverID, "receiver_id": userID},
-        },
-    }
+	// 3) Build the two‑way filter
+	filter := bson.M{
+		"$or": []bson.M{
+			{"sender_id": senderID, "receiver_id": receiverID},
+			{"sender_id": receiverID, "receiver_id": senderID},
+		},
+	}
 
-    coll := config.GetCollection(models.CollectionNameMessage)
-    cursor, err := coll.Find(ctx, filter)
-    if err != nil {
-        http.Error(w, "DB error", http.StatusInternalServerError)
-        return
-    }
-    defer cursor.Close(ctx)
+	// 4) Query MongoDB
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-    var messages []models.Message
-    if err := cursor.All(ctx, &messages); err != nil {
-        http.Error(w, "Decode error", http.StatusInternalServerError)
-        return
-    }
+	coll := config.GetCollection(models.CollectionNameMessage)
+	cursor, err := coll.Find(ctx, filter, options.Find().SetSort(bson.M{"created_at": 1}))
+	if err != nil {
+		log.Println("❌ GetMessages Find error:", err)
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer cursor.Close(ctx)
 
-    json.NewEncoder(w).Encode(messages)
+	// 5) Decode all messages
+	var messages []models.Message
+	if err := cursor.All(ctx, &messages); err != nil {
+		log.Println("❌ GetMessages Decode error:", err)
+		http.Error(w, "Data error", http.StatusInternalServerError)
+		return
+	}
+
+	// 6) Return as JSON
+	if err := json.NewEncoder(w).Encode(messages); err != nil {
+		log.Println("❌ GetMessages Encode error:", err)
+	}
 }

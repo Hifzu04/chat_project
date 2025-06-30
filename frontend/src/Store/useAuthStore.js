@@ -5,14 +5,16 @@
 import { create } from "zustand"
 import { axiosInstance } from "../lib/axios"
 import toast from "react-hot-toast";
-import axios from "axios";
+//mport axios from "axios";
 
 export const useAuthStore = create((set) => ({
     authUser: null,
     isSigningup: false,
     isLoggingin: false,
     isUpdatingProfile: false,
+    onlineUsers: [],
 
+    socket: null,
     isCheckingAuth: true,
 
 
@@ -57,13 +59,13 @@ export const useAuthStore = create((set) => ({
             set({ authUser: user });
             axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
             toast.success("Loggedin sucessfully");
-           //return true; // Indicate successful login
+            //return true; // Indicate successful login
         } catch (error) {
             console.log("some thing went wrong while logging in ")
             const message = error.response?.data?.message || error.message || "something went wrong"
             toast.error(message)
-            return false; // Indicate failed login
-            
+            // return false; // Indicate failed login
+
         } finally {
             set({ isLoggingin: false })
         }
@@ -92,9 +94,29 @@ export const useAuthStore = create((set) => ({
         } catch (error) {
             console.error("error in update profile", error);
             toast.error("Failed to update profile");
-        } finally{
-            set({isUpdatingProfile : false})
+        } finally {
+            set({ isUpdatingProfile: false })
         }
     },
+    // connectSocket: () => {
+    // const { authUser } = get();
+    // if (!authUser || get().socket?.connected) return;
+
+//     const socket = io(BASE_URL, {
+//       query: {
+//         userId: authUser._id,
+//       },
+//     });
+//     socket.connect();
+
+//     set({ socket: socket });
+
+//     socket.on("getOnlineUsers", (userIds) => {
+//       set({ onlineUsers: userIds });
+//     });
+//   },
+//   disconnectSocket: () => {
+//     if (get().socket?.connected) get().socket.disconnect();
+//   },
 
 }))
