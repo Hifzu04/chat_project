@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { useAuthStore } from '../Store/useAuthStore'
-import Profile_pic from '../assets/Profile_pic.png'
+//import Profile_pic from '../assets/Profile_pic.png'
 import { Camera, Mail, User } from 'lucide-react';
 
 function Profile() {
@@ -41,7 +41,7 @@ function Profile() {
             <div className='relative' >
               <img
                 //checkfordebugging .profilepic
-                src={selectedImage || authUser.profile_pic || Profile_pic}
+                src={selectedImage || authUser.profile_pic || "/avatar.png"}
                 alt='profilepic'
                 className='rounded-full border-4  object-cover size-32  '
               />
