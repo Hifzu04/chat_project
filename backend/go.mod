@@ -5,20 +5,23 @@ go 1.24.0
 require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gorilla/mux v1.8.1
+	github.com/gorilla/websocket v1.5.3
 	github.com/joho/godotenv v1.5.1
 	go.mongodb.org/mongo-driver v1.17.4
 	golang.org/x/crypto v0.39.0
+
 )
 
+require github.com/rs/cors v1.11.1 // indirect
+
 require (
-	github.com/cloudinary/cloudinary-go/v2 v2.10.0 // indirect
+	github.com/cloudinary/cloudinary-go/v2 v2.10.0
 	github.com/creasty/defaults v1.7.0 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
-	github.com/google/uuid v1.5.0 // indirect
+	github.com/google/uuid v1.6.0 // indirect
 	github.com/gorilla/schema v1.4.1 // indirect
-	github.com/klauspost/compress v1.16.7 // indirect
+	github.com/klauspost/compress v1.17.0 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
-	github.com/rs/cors v1.11.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect
