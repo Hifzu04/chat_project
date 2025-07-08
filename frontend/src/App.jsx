@@ -16,9 +16,11 @@ import { Toaster } from "react-hot-toast";
 
 
 export default function App() {
-  const { checkAuth, authUser, isCheckingAuth } = useAuthStore();
+  const { checkAuth, authUser, isCheckingAuth, onlineUsers } = useAuthStore();
   const {theme} = useThemeStore();
   //  const { theme } = useThemeStore();
+
+  console.log(onlineUsers);
 
 
   //when we will refresh the page , checkAuth will check whether user is loggedIn. 

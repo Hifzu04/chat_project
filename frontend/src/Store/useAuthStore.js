@@ -5,9 +5,17 @@
 import { create } from "zustand"
 import { axiosInstance } from "../lib/axios"
 import toast from "react-hot-toast";
-//mport axios from "axios";
+import { useChatStore } from "./useChatStore";
+// after (correct for v2.x)
+import { io } from "socket.io-client";       // v4.x
 
-export const useAuthStore = create((set) => ({
+
+//const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:8000" : "/";
+const BASE_URL = "http://localhost:8000"
+
+
+
+export const useAuthStore = create((set, get) => ({
     authUser: null,
     isSigningup: false,
     isLoggingin: false,
@@ -23,6 +31,7 @@ export const useAuthStore = create((set) => ({
         try {
             const res = await axiosInstance.get("/auth/check");  //auth/check are from backend
             set({ authUser: res.data });
+            get().connectSocket();
         } catch (error) {
             console.log("error in check auth check ur axios or BE:", error);
             set({ authUser: null });
@@ -38,6 +47,7 @@ export const useAuthStore = create((set) => ({
             const res = await axiosInstance.post("/signup", data);
             set({ authUser: res.data });
             toast.success("Account Created Sucessfully")
+            get().connectSocket();
 
         } catch (error) {
             const message =
@@ -60,6 +70,8 @@ export const useAuthStore = create((set) => ({
             axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
             toast.success("Loggedin sucessfully");
             //return true; // Indicate successful login
+
+            get().connectSocket();
         } catch (error) {
             console.log("some thing went wrong while logging in ")
             const message = error.response?.data?.message || error.message || "something went wrong"
@@ -76,6 +88,7 @@ export const useAuthStore = create((set) => ({
             await axiosInstance.post("/logout");
             set({ authUser: null });
             toast.success("logged out sucessfully")
+            get().disconnectSocket();
         } catch (error) {
             toast.error(error.response.data.message)
         }
@@ -98,25 +111,53 @@ export const useAuthStore = create((set) => ({
             set({ isUpdatingProfile: false })
         }
     },
-    // connectSocket: () => {
-    // const { authUser } = get();
-    // if (!authUser || get().socket?.connected) return;
 
-//     const socket = io(BASE_URL, {
-//       query: {
-//         userId: authUser._id,
-//       },
-//     });
-//     socket.connect();
 
-//     set({ socket: socket });
+    connectSocket: () => {
+        const { authUser } = get();
+        if (!authUser || get().socket) return;
 
-//     socket.on("getOnlineUsers", (userIds) => {
-//       set({ onlineUsers: userIds });
-//     });
-//   },
-//   disconnectSocket: () => {
-//     if (get().socket?.connected) get().socket.disconnect();
-//   },
+        const socket = new WebSocket(`ws://localhost:8000/ws?userId=${authUser.id}`);
+
+        socket.onopen = () => {
+            console.log("WebSocket connected");
+        };
+
+        socket.onmessage = (event) => {
+            const msg = JSON.parse(event.data);
+            const { event: type, data } = msg;
+
+            if (type === "getOnlineUsers") {
+                set({ onlineUsers: data });
+            }
+
+            if (type === "newMessage") {
+                const { selectedUser, messages } = useChatStore.getState();
+                if (selectedUser && data.sender_id === selectedUser._id) {
+                    useChatStore.setState({ messages: [...messages, data] });
+                }
+            }
+        };
+
+        socket.onclose = () => {
+            console.log("WebSocket disconnected");
+            set({ socket: null });
+        };
+
+        socket.onerror = (err) => {
+            console.error("WebSocket error:", err);
+        };
+
+        set({ socket });
+    },
+
+
+    disconnectSocket: () => {
+        const socket = get().socket;
+        if (socket) {
+            socket.close(); // triggers onclose
+            set({ socket: null, onlineUsers: [] });
+        }
+    },
 
 }))
