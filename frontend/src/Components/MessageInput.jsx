@@ -39,41 +39,27 @@ const MessageInput = () => {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
+ const handleSendMessage = async (e) => {
+  e.preventDefault();
+  if (!text.trim() && !imageFile) return;
 
-    console.log("ImageFile right before send:", imageFile);  // Debug #2
+  // Build a real FormData
+  const formData = new FormData();
+  formData.append("receiver_id", selectedUser._id);
+  if (text.trim()) formData.append("text", text.trim());
+  if (imageFile) formData.append("images", imageFile);
 
-    if (!text.trim() && !imageFile) {
-      console.log("No image/text selected");
-      return;
-    }
-
-    const formData = new FormData();
-    formData.append("receiver_id", selectedUser._id);
-    if (text.trim()) formData.append("text", text.trim());
-    if (imageFile) formData.append("images", imageFile);
-
-    // Debug #3: list all form entries
-    for (const [key, val] of formData.entries()) {
-      console.log("🗂️ formData entry:", key, val);
-    }
-
-    try {
-      const res = await axiosInstance.post("/messages/send", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      console.log("Server response:", res.data);
-      // update local state if needed
-      await sendMessage(res.data);
-    } catch (error) {
-      console.error("❌ Error sending message:", error);
-      toast.error("Failed to send message");
-    } finally {
-      setText("");
-      removeImage();
-    }
-  };
+  try {
+    // Delegate to your store’s sendMessage (which posts + broadcasts)
+    await sendMessage(formData);
+  } catch (error) {
+    console.error("❌ Error sending message:", error);
+    toast.error("Failed to send message");
+  } finally {
+    setText("");
+    removeImage();
+  }
+};
 
   return (
     <div className="p-4 w-full">
@@ -114,7 +100,7 @@ const MessageInput = () => {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className={`hidden sm:flex btn btn-circle ${
+            className={` sm:flex btn btn-circle ${
               imagePreview ? "text-emerald-500" : "text-zinc-400"
             }`}
           >
