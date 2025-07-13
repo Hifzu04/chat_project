@@ -11,6 +11,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   selectedUser: null,
+  unseenCounts: {},  
 
 
 
@@ -69,7 +70,8 @@ export const useChatStore = create((set, get) => ({
       }
 
       // Locally display it
-      set({ messages: [...messages, messagePayload] });
+      const updatedMessages = Array.isArray(messages) ? messages : [];
+      set({ messages: [...updatedMessages, messagePayload] });
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
       throw error;
@@ -91,6 +93,10 @@ export const useChatStore = create((set, get) => ({
     if (socket) socket.onmessage = null;
   },
 
+
+
+
+  
 
 
 
