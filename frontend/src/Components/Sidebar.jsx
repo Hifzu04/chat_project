@@ -8,6 +8,7 @@ const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
   const { onlineUsers, authUser } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getUsers();
@@ -22,7 +23,16 @@ const Sidebar = () => {
   // 3) Pick filtered set based on toggle
   const displayed = showOnlineOnly ? onlineOthers : otherUsers;
 
+
+  //search user
+    const filtered = displayed.filter(u =>
+    u.fullname.toLowerCase().includes(searchTerm.trim().toLowerCase())
+  );
+
   if (isUsersLoading) return <SidebarSkeleton />;
+
+
+
 
   return (
     <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col">
@@ -31,6 +41,17 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
+
+        <div className="mt-3 px-3">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            placeholder="Search users…"
+            className="input input-sm w-full input-bordered rounded-lg"
+          />
+        </div>
+
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -46,7 +67,7 @@ const Sidebar = () => {
       </div>
 
       <div className="overflow-y-auto w-full py-3">
-        {displayed.map((user) => (
+        {filtered.map((user) => (
           <button
             key={user._id}
             onClick={() => setSelectedUser(user)}
