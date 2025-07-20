@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	upgrader websocket.Upgrader
+	upgrader  websocket.Upgrader
 	clients   = map[string]*websocket.Conn{} // userID → WS conn
 	clientsMu sync.Mutex
 )
