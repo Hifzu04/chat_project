@@ -60,6 +60,9 @@ func main() {
 		port = "8000"
 	}
 	fmt.Printf("Server listening on port %s\n", port)
+	fmt.Println("PORT from env:", port)
+	fmt.Println("FRONTEND_URL from env:", frontendURL)
+
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
