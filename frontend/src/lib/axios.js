@@ -9,6 +9,7 @@ export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   withCredentials: true,
 });
+ 
 
 
 //baseURL: All requests made using this instance will be prefixed with http://localhost:5001/api.
