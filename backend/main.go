@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"sync"
 
 	"github.com/gorilla/websocket"
@@ -15,42 +16,51 @@ import (
 )
 
 var (
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			// allow requests from your React dev server
-			return r.Header.Get("Origin") == "http://localhost:5173"
-		},
-	}
+	upgrader websocket.Upgrader
 	clients   = map[string]*websocket.Conn{} // userID → WS conn
 	clientsMu sync.Mutex
 )
 
-func main() {
-	// 1) Load env & connect to MongoDB
-	if err := godotenv.Load(); err != nil {
-		log.Println("no .env file; using environment vars")
+func init() {
+	// Load .env in local development; in production Render injects real env vars
+	_ = godotenv.Load()
+
+	frontendURL := os.Getenv("FRONTEND_URL") // e.g. "https://chatnest.onrender.com"
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool {
+			// Only allow our frontend origin
+			return r.Header.Get("Origin") == frontendURL
+		},
 	}
+}
+
+func main() {
+	// Connect to MongoDB
 	config.ConnectDB()
 
-	// 2) Register REST API under /
+	// Register REST API
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/", routes.RegisterRoutes())
 
-	// 3) Register WebSocket endpoint under /ws
+	// Register WebSocket endpoint under /ws
 	apiMux.HandleFunc("/ws", wsHandler)
 
-	// 4) Wrap everything in CORS
+	// Wrap everything in CORS
+	frontendURL := os.Getenv("FRONTEND_URL")
 	handler := cors.New(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:5173"},
+		AllowedOrigins:   []string{frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Authorization", "Content-Type"},
 		AllowCredentials: true,
-		// EnableDebug:    true, // uncomment to log CORS decisions
 	}).Handler(apiMux)
 
-	// 5) Start server
-	fmt.Println("Server listening on :8000")
-	log.Fatal(http.ListenAndServe(":8000", handler))
+	// Determine port (Render provides $PORT)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+	fmt.Printf("Server listening on port %s\n", port)
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,13 +76,13 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Register and broadcast online users
+	// Register user and broadcast updated online list
 	clientsMu.Lock()
 	clients[userID] = conn
 	broadcast("getOnlineUsers", currentUsers())
 	clientsMu.Unlock()
 
-	// Clean up when they disconnect
+	// Clean up on disconnect
 	defer func() {
 		clientsMu.Lock()
 		delete(clients, userID)
@@ -81,7 +91,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		conn.Close()
 	}()
 
-	// Read incoming messages
+	// Listen for incoming WS messages
 	for {
 		var msg struct {
 			Event string                 `json:"event"`
@@ -98,14 +108,20 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func currentUsers() []string {
-	ks := make([]string, 0, len(clients))
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+
+	ids := make([]string, 0, len(clients))
 	for id := range clients {
-		ks = append(ks, id)
+		ids = append(ids, id)
 	}
-	return ks
+	return ids
 }
 
 func broadcast(event string, payload interface{}) {
+	clientsMu.Lock()
+	defer clientsMu.Unlock()
+
 	for _, c := range clients {
 		_ = c.WriteJSON(map[string]interface{}{
 			"event": event,
@@ -115,10 +131,15 @@ func broadcast(event string, payload interface{}) {
 }
 
 func sendTo(userID, event string, payload interface{}) {
-	if c, ok := clients[userID]; ok {
-		_ = c.WriteJSON(map[string]interface{}{
-			"event": event,
-			"data":  payload,
-		})
+	clientsMu.Lock()
+	c, ok := clients[userID]
+	clientsMu.Unlock()
+
+	if !ok {
+		return
 	}
+	_ = c.WriteJSON(map[string]interface{}{
+		"event": event,
+		"data":  payload,
+	})
 }

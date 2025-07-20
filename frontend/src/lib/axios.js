@@ -6,12 +6,9 @@
 import axios from "axios";
 
 export const axiosInstance = axios.create({
-    baseURL: "http://localhost:8000",
-    
-
-    //if error : check using baseurl  baseURL: "http://localhost:5001",
-    withCredentials: true,
-})  
+  baseURL: import.meta.env.VITE_API_URL,
+  withCredentials: true,
+});
 
 
 //baseURL: All requests made using this instance will be prefixed with http://localhost:5001/api.
