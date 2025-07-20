@@ -35,14 +35,14 @@ const Sidebar = () => {
 
 
   return (
-    <aside className="h-full w-20 lg:w-72 border-r border-base-300 flex flex-col">
+    <aside className="h-full w-20 md:w-48 lg:w-72 border-r border-base-300 flex flex-col">
       <div className="border-b border-base-300 w-full p-5">
         <div className="flex items-center gap-2">
           <Users className="size-6" />
-          <span className="font-medium hidden lg:block">Contacts</span>
+          <span className="font-medium hidden md:block">Contacts</span>
         </div>
 
-        <div className="mt-3 px-3">
+        <div className="mt-3 hidden md:block px-3">
           <input
             type="text"
             value={searchTerm}
@@ -52,7 +52,7 @@ const Sidebar = () => {
           />
         </div>
 
-        <div className="mt-3 hidden lg:flex items-center gap-2">
+        <div className="mt-3 hidden md:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
               type="checkbox"
@@ -90,7 +90,7 @@ const Sidebar = () => {
                 />
               )}
             </div>
-            <div className="hidden lg:block text-left min-w-0">
+            <div className="hidden md:block text-left min-w-0">
               <div className="font-medium truncate">{user.fullname}</div>
               <div className="text-sm text-zinc-400">
                 {onlineUsers.includes(user._id) ? "Online" : "Offline"}
