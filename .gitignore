@@ -1,0 +1,17 @@
+# === Frontend ===
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/.env*
+frontend/npm-debug.log*
+frontend/yarn-error.log*
+
+# === Backend ===
+backend/.env
+
+backend/*.exe
+backend/*.out
+
+# === Common ===
+.DS_Store
+*.log
