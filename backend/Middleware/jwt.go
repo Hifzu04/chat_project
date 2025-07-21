@@ -19,7 +19,7 @@ import (
 
 // JWTSecret is the secret key used to sign JWT tokens.
 // In production, store this in an environment variable or secrets manager.
-var JWTSecret = []byte("your_jwt_secret_key_here")
+var JWTSecret = []byte("uaRxLXE5i6y3/gAM3w/XYh44lj7W0r9hQEF00DkgusQ=")
 
 // Claims defines the structure of JWT claims used in this app.
 // It includes the user’s ID and standard registered claims.

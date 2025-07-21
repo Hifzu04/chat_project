@@ -118,7 +118,8 @@ export const useAuthStore = create((set, get) => ({
         if (!authUser || get().socket) return;
 
         const wsUrl = import.meta.env.VITE_API_URL.replace(/^http/, "ws");
-        const socket = new WebSocket(`${wsUrl}/ws?userId=${user.id}`);
+
+        const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser.id}`);
 
         socket.onopen = () => {
             console.log("WebSocket connected");
