@@ -150,10 +150,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:     "token",
 		Value:    tokenString,
-		Secure:   false,
-		Expires:  time.Now().Add(24 * time.Hour),
-		HttpOnly: true,
 		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,                  // only sent over HTTPS
+		SameSite: http.SameSiteNoneMode, // allow cross‑site
+		Expires:  time.Now().Add(48 * time.Hour),
 	})
 
 	w.Header().Set("Content-Type", "application/json")
