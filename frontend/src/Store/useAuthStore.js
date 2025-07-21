@@ -114,36 +114,36 @@ export const useAuthStore = create((set, get) => ({
 
 
     connectSocket: () => {
-  const { authUser, socket: existing } = get();
-  if (!authUser || existing) return;
+        const { authUser, socket: existing } = get();
+        if (!authUser || existing) return;
 
-  // strip any trailing slash
-  const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
-  const wsUrl = base.replace(/^http/, "ws");
-  const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser._id}`);
+        // strip any trailing slash
+        const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+        const wsUrl = base.replace(/^http/, "ws");
+        const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser._id}`);
 
-  socket.onopen = () => console.log("WebSocket connected");
+        socket.onopen = () => console.log("WebSocket connected");
 
-  // use addEventListener so you don't overwrite any handlers
-  socket.addEventListener("message", ({ data }) => {
-    const { event: type, data: payload } = JSON.parse(data);
+        // use addEventListener so you don't overwrite any handlers
+        socket.addEventListener("message", ({ data }) => {
+            const { event: type, data: payload } = JSON.parse(data);
 
-    if (type === "getOnlineUsers") {
-      set({ onlineUsers: payload });
-    }
-    if (type === "newMessage") {
-      useChatStore.getState().handleIncomingMessage(payload);
-    }
-  });
+            if (type === "getOnlineUsers") {
+                set({ onlineUsers: payload });
+            }
+            if (type === "newMessage") {
+                useChatStore.getState().handleIncomingMessage(payload);
+            }
+        });
 
-  socket.onclose = () => {
-    console.log("WebSocket disconnected");
-    set({ socket: null });
-  };
-  socket.onerror = err => console.error("WebSocket error:", err);
+        socket.onclose = () => {
+            console.log("WebSocket disconnected");
+            set({ socket: null });
+        };
+        socket.onerror = err => console.error("WebSocket error:", err);
 
-  set({ socket });
-},
+        set({ socket });
+    },
 
 
     disconnectSocket: () => {

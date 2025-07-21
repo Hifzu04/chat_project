@@ -11,7 +11,7 @@ export const useChatStore = create((set, get) => ({
   isUsersLoading: false,
   isMessagesLoading: false,
   selectedUser: null,
-  unseenCounts: {},  
+  unseenCounts: {},
 
 
 
@@ -77,26 +77,34 @@ export const useChatStore = create((set, get) => ({
       throw error;
     }
   },
-  subscribeToMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    if (!socket) return
-    socket.onmessage = ({ data }) => {
-      const { event, data: payload } = JSON.parse(data)
-      if (event === "newMessage" && payload.sender_id === get().selectedUser._id) {
-        set({ messages: [...get().messages, payload] })
-      }
+  handleIncomingMessage: (msg) => {
+    const { sender_id } = msg;
+    const { selectedUser, users, unseenCounts } = get();
+
+    // 1) reorder the user list so sender jumps to front
+    const remaining = users.filter(u => u._id !== sender_id);
+    const senderUser = users.find(u => u._id === sender_id);
+    const newUsers = senderUser ? [senderUser, ...remaining] : users;
+
+    // 2) increment unseen count if not the open convo
+    const newCounts = { ...unseenCounts };
+    if (!selectedUser || selectedUser._id !== sender_id) {
+      newCounts[sender_id] = (newCounts[sender_id] || 0) + 1;
     }
+
+    // 3) if that convo is open, also append the message
+    if (selectedUser && selectedUser._id === sender_id) {
+      set(state => ({ messages: [...state.messages, msg] }));
+    }
+
+    // 4) commit both updates
+    set({ users: newUsers, unseenCounts: newCounts });
   },
 
-  unsubscribeFromMessages: () => {
-    const socket = useAuthStore.getState().socket;
-    if (socket) socket.onmessage = null;
-  },
 
 
 
 
-  
 
 
 

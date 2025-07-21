@@ -15,7 +15,8 @@ const Sidebar = () => {
   }, [getUsers]);
 
   // 1) Exclude yourself from every list
-  const otherUsers = users.filter((u) => u._id !== authUser?.id);
+ const otherUsers = users.filter(u => u._id !== authUser?._id);
+
 
   // 2) Determine which of those are online
   const onlineOthers = otherUsers.filter((u) => onlineUsers.includes(u._id));
