@@ -152,7 +152,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		Value:    tokenString,
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   true,                  // only sent over HTTPS
+		Secure:   true,                // only sent over HTTPS
 		SameSite: http.SameSiteNoneMode, // allow cross‑site
 		Expires:  time.Now().Add(48 * time.Hour),
 	})

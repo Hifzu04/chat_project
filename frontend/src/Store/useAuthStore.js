@@ -91,7 +91,7 @@ export const useAuthStore = create((set, get) => ({
     const { authUser, socket: existing } = get();
     if (!authUser || existing) return;
 
-    const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+    const base = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
     const wsUrl = base.replace(/^http/, "ws");
     const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser._id}`);
 
