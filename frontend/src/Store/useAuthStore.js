@@ -13,6 +13,7 @@ export const useAuthStore = create((set, get) => ({
   socket: null,
   isCheckingAuth: true,
 
+  // 1) Check existing session on page load
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check", { withCredentials: true });
@@ -26,6 +27,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // 2) Signup new user
   signup: async (data) => {
     set({ isSigningup: true });
     try {
@@ -33,25 +35,32 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Account Created Successfully");
       get().connectSocket();
+      return true;
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
+      return false;
     } finally {
       set({ isSigningup: false });
     }
   },
 
+  // 3) Login existing user
   login: async (data) => {
     set({ isLoggingin: true });
     try {
-      // 🔥 FIX: actually perform the HTTP request
+      // • send credentials
       const res = await axiosInstance.post("/login", data, { withCredentials: true });
-      const { user } = res.data;       // now res is defined
+      // • grab token + user
+      const { token, user } = res.data;
+      // • set fallback header for subsequent requests
+      axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      // • update state + connect websocket
       set({ authUser: user });
       toast.success("Logged in successfully");
       get().connectSocket();
       return true;
     } catch (error) {
-      console.log("error during login:", error);
+      console.error("login failed:", error);
       toast.error(error.response?.data?.message || error.message);
       return false;
     } finally {
@@ -59,6 +68,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // 4) Logout
   logout: async () => {
     try {
       await axiosInstance.post("/logout", {}, { withCredentials: true });
@@ -70,6 +80,7 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // 5) Update profile
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
@@ -87,11 +98,12 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // 6) WebSocket setup
   connectSocket: () => {
     const { authUser, socket: existing } = get();
     if (!authUser || existing) return;
 
-    const base = (import.meta.env.VITE_API_URL || "http://localhost:8000").replace(/\/$/, "");
+    const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
     const wsUrl = base.replace(/^http/, "ws");
     const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser._id}`);
 
