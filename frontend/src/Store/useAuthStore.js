@@ -7,11 +7,11 @@ import { axiosInstance } from "../lib/axios"
 import toast from "react-hot-toast";
 import { useChatStore } from "./useChatStore";
 // after (correct for v2.x)
-import { io } from "socket.io-client";       // v4.x
+//import { io } from "socket.io-client";       // v4.x
 
 
 //const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:8000" : "/";
-const BASE_URL = "http://localhost:8000"
+//const BASE_URL = "http://localhost:8000"
 
 
 
@@ -64,14 +64,15 @@ export const useAuthStore = create((set, get) => ({
     login: async (data) => {
         set({ isLoggingin: true })
         try {
-            const res = await axiosInstance.post("/login", data);
-            const { token, user } = res.data;
+            const { user } = res.data;
             set({ authUser: user });
-            axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
             toast.success("Loggedin sucessfully");
+            get().connectSocket();
+
+         //   toast.success("Loggedin sucessfully");
             //return true; // Indicate successful login
 
-            get().connectSocket();
+           // get().connectSocket();
         } catch (error) {
             console.log("some thing went wrong while logging in ")
             const message = error.response?.data?.message || error.message || "something went wrong"

@@ -77,27 +77,27 @@ export const useChatStore = create((set, get) => ({
       throw error;
     }
   },
-  handleIncomingMessage: (msg) => {
+ handleIncomingMessage: (msg) => {
     const { sender_id } = msg;
     const { selectedUser, users, unseenCounts } = get();
 
-    // 1) reorder the user list so sender jumps to front
-    const remaining = users.filter(u => u._id !== sender_id);
-    const senderUser = users.find(u => u._id === sender_id);
-    const newUsers = senderUser ? [senderUser, ...remaining] : users;
+    // 1) Reorder users so sender jumps to front
+    const rest = users.filter(u => u._id !== sender_id);
+    const sender = users.find(u => u._id === sender_id);
+    const newUsers = sender ? [sender, ...rest] : users;
 
-    // 2) increment unseen count if not the open convo
+    // 2) Increment unseen if not currently chatting
     const newCounts = { ...unseenCounts };
     if (!selectedUser || selectedUser._id !== sender_id) {
       newCounts[sender_id] = (newCounts[sender_id] || 0) + 1;
     }
 
-    // 3) if that convo is open, also append the message
+    // 3) If that chat is open, also append the message
     if (selectedUser && selectedUser._id === sender_id) {
       set(state => ({ messages: [...state.messages, msg] }));
     }
 
-    // 4) commit both updates
+    // 4) Commit both changes
     set({ users: newUsers, unseenCounts: newCounts });
   },
 
