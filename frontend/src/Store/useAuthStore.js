@@ -43,14 +43,14 @@ export const useAuthStore = create((set, get) => ({
   login: async (data) => {
     set({ isLoggingin: true });
     try {
-      // 🔥 FIXED: actually call axios and await the response
+      // 🔥 FIX: actually perform the HTTP request
       const res = await axiosInstance.post("/login", data, { withCredentials: true });
-      const { user } = res.data;
+      const { user } = res.data;       // now res is defined
       set({ authUser: user });
       toast.success("Logged in successfully");
       get().connectSocket();
     } catch (error) {
-      console.log("something went wrong while logging in", error);
+      console.log("error during login:", error);
       toast.error(error.response?.data?.message || error.message);
     } finally {
       set({ isLoggingin: false });
@@ -71,10 +71,11 @@ export const useAuthStore = create((set, get) => ({
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
-      const res = await axiosInstance.put("/user/update", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
+      const res = await axiosInstance.put(
+        "/user/update",
+        data,
+        { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
+      );
       set({ authUser: res.data });
       toast.success("Profile updated successfully");
     } catch (error) {

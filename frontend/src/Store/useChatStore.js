@@ -15,7 +15,7 @@ export const useChatStore = create((set, get) => ({
     set({ isUsersLoading: true });
     try {
       const res = await axiosInstance.get("/users", { withCredentials: true });
-      const users = res.data.map((u) => ({ ...u, _id: u.id }));
+      const users = res.data.map(u => ({ ...u, _id: u.id }));
       set({ users });
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
@@ -61,25 +61,24 @@ export const useChatStore = create((set, get) => ({
     const { sender_id } = msg;
     const { selectedUser, users, unseenCounts } = get();
 
-    // 1) Reorder users
-    const rest = users.filter((u) => u._id !== sender_id);
-    const sender = users.find((u) => u._id === sender_id);
+    const rest = users.filter(u => u._id !== sender_id);
+    const sender = users.find(u => u._id === sender_id);
     const newUsers = sender ? [sender, ...rest] : users;
 
-    // 2) Increment unseen
     const newCounts = { ...unseenCounts };
     if (!selectedUser || selectedUser._id !== sender_id) {
       newCounts[sender_id] = (newCounts[sender_id] || 0) + 1;
     }
 
-    // 3) Append to open chat
     if (selectedUser && selectedUser._id === sender_id) {
-      set((s) => ({ messages: [...s.messages, msg] }));
+      set(state => ({ messages: [...state.messages, msg] }));
     }
 
-    // 4) Commit updates
     set({ users: newUsers, unseenCounts: newCounts });
   },
 
-  setSelectedUser: (selectedUser) => set({ selectedUser, unseenCounts: { ...get().unseenCounts, [selectedUser._id]: 0 } }),
+  setSelectedUser: (user) => set({
+    selectedUser: user,
+    unseenCounts: { ...get().unseenCounts, [user._id]: 0 }
+  }),
 }));
