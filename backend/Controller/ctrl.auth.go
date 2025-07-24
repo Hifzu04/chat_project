@@ -154,6 +154,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Secure:   true,                // only sent over HTTPS
 		SameSite: http.SameSiteNoneMode, // allow cross‑site
+		   Partitioned:true,
 		Expires:  time.Now().Add(48 * time.Hour),
 	})
 
