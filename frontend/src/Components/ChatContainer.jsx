@@ -14,8 +14,7 @@ const ChatContainer = () => {
     getMessages,
     isMessagesLoading,
     selectedUser,
-    subscribeToMessages,
-    unsubscribeFromMessages,
+
   } = useChatStore();
   const { authUser } = useAuthStore();
 
@@ -27,14 +26,12 @@ const ChatContainer = () => {
   useEffect(() => {
     if (selectedUser?._id) {
       getMessages(selectedUser._id);
-      subscribeToMessages();
-      return () => unsubscribeFromMessages();
+
     }
   }, [
     selectedUser?._id,
     getMessages,
-    subscribeToMessages,
-    unsubscribeFromMessages,
+
   ]);
 
   useEffect(() => {
@@ -67,7 +64,7 @@ const ChatContainer = () => {
             const isMe = message.sender_id === authUser.id;
             return (
               <div
-                key={message._id}
+                key={message.id}
                 className={`chat ${isMe ? "chat-end" : "chat-start"}`}
                 ref={messageEndRef}
               >
