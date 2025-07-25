@@ -17,7 +17,9 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check", { withCredentials: true });
-      set({ authUser: res.data });
+      const u = res.data;
+      u._id = u.id;
+      set({ authUser: u });
       get().connectSocket();
     } catch (error) {
       console.log("error in checkAuth:", error);
@@ -55,8 +57,9 @@ export const useAuthStore = create((set, get) => ({
       // • set fallback header for subsequent requests
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       // • update state + connect websocket
-      set({ authUser: user });
-      toast.success("Logged in successfully");
+
+      user._id = user.id;
+      set({ authUser: user }); toast.success("Logged in successfully");
       get().connectSocket();
       return true;
     } catch (error) {
