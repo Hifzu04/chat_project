@@ -28,13 +28,6 @@ func init() {
 	// Load .env in local development; in production Render injects real env vars
 	_ = godotenv.Load()
 
-	frontendURL := os.Getenv("FRONTEND_URL") // e.g. "https://chatnest.onrender.com"
-	upgrader = websocket.Upgrader{
-		CheckOrigin: func(r *http.Request) bool {
-			// Only allow our frontend origin
-			return r.Header.Get("Origin") == frontendURL
-		},
-	}
 }
 
 func main() {
