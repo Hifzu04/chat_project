@@ -102,34 +102,29 @@ export const useAuthStore = create((set, get) => ({
   },
 
   // 6) WebSocket setup
-  connectSocket: () => {
-    const { authUser, socket: existing } = get();
-    if (!authUser || existing) return;
+ connectSocket: () => {
+  const { authUser, socket: existing } = get();
+  if (!authUser || existing) return;
 
-    const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
-    const wsUrl = base.replace(/^http/, "ws");
-    const socket = new WebSocket(`${wsUrl}/ws?userId=${authUser._id}`);
+  const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
+  const wsUrl = base.replace(/^http/, "ws");
+  const fullUrl = `${wsUrl}/ws?userId=${authUser._id}`;
+  console.log("👉 Opening WS:", fullUrl);
 
-    socket.onopen = () => console.log("WebSocket connected");
+  const socket = new WebSocket(fullUrl);
 
-    socket.addEventListener("message", ({ data }) => {
-      const { event: type, data: payload } = JSON.parse(data);
-      if (type === "getOnlineUsers") {
-        set({ onlineUsers: payload });
-      }
-      if (type === "newMessage") {
-        useChatStore.getState().handleIncomingMessage(payload);
-      }
-    });
+  socket.onopen = () => console.log("✅ WS open");
+  socket.onerror = (err) => console.error("❌ WS error", err);
+  socket.onclose = () => console.log("⚠️ WS closed");
+  socket.addEventListener("message", ({ data }) => {
+    console.log("⬅️ WS message:", data);
+    const { event: type, data: payload } = JSON.parse(data);
+    if (type === "getOnlineUsers") set({ onlineUsers: payload });
+    if (type === "newMessage") useChatStore.getState().handleIncomingMessage(payload);
+  });
 
-    socket.onclose = () => {
-      console.log("WebSocket disconnected");
-      set({ socket: null });
-    };
-    socket.onerror = (err) => console.error("WebSocket error:", err);
-
-    set({ socket });
-  },
+  set({ socket });
+},
 
   disconnectSocket: () => {
     const socket = get().socket;
