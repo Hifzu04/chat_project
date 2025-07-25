@@ -9,6 +9,12 @@ const ChatHeader = () => {
   const { selectedUser, setSelectedUser } = useChatStore();
    const { onlineUsers } = useAuthStore();
 
+
+
+  if (!selectedUser) {
+    // nothing to show
+    return null;
+  }
   return (
     <div className="">
       <div className="flex items-center justify-between bg-base-300 p-2">

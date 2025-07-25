@@ -77,8 +77,18 @@ export const useChatStore = create((set, get) => ({
     set({ users: newUsers, unseenCounts: newCounts });
   },
 
-  setSelectedUser: (user) => set({
-    selectedUser: user,
-    unseenCounts: { ...get().unseenCounts, [user._id]: 0 }
-  }),
+  setSelectedUser: (user) => {
+    if (!user) {
+      // clear selection (and reset unseen counts if you like)
+      return set({ selectedUser: null });
+    }
+    // otherwise select normally
+    set({
+      selectedUser: user,
+      unseenCounts: {
+        ...get().unseenCounts,
+        [user._id]: 0,
+      },
+    });
+  },
 }));
