@@ -47,6 +47,8 @@ func main() {
 
 	// Wrap everything in CORS
 	frontendURL := os.Getenv("FRONTEND_URL")
+
+	
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
