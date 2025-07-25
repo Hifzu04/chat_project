@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	upgrader  websocket.Upgrader
+	upgrader = websocket.Upgrader{CheckOrigin: func(r *http.Request) bool { return true }}
+
 	clients   = map[string]*websocket.Conn{} // userID → WS conn
 	clientsMu sync.Mutex
 )
@@ -48,7 +49,6 @@ func main() {
 	// Wrap everything in CORS
 	frontendURL := os.Getenv("FRONTEND_URL")
 
-	
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -69,6 +69,7 @@ func main() {
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
+
 	userID := r.URL.Query().Get("userId")
 	if userID == "" {
 		http.Error(w, "userId required", http.StatusBadRequest)
