@@ -17,8 +17,10 @@ export const useAuthStore = create((set, get) => ({
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check", { withCredentials: true });
-      const u = res.data;
-      u._id = u.id;
+      const u = res.data.user || res.data;
+      u.id = u.id;     // already there
+      u._id = u.id;    // add Mongo‑style alias
+
       set({ authUser: u });
       get().connectSocket();
     } catch (error) {
@@ -54,12 +56,14 @@ export const useAuthStore = create((set, get) => ({
       const res = await axiosInstance.post("/login", data, { withCredentials: true });
       // • grab token + user
       const { token, user } = res.data;
+      user._id = user.id;
+      set({ authUser: user });
       // • set fallback header for subsequent requests
       axiosInstance.defaults.headers.common["Authorization"] = `Bearer ${token}`;
       // • update state + connect websocket
 
-      user._id = user.id;
-      set({ authUser: user }); toast.success("Logged in successfully");
+
+      toast.success("Logged in successfully");
       get().connectSocket();
       return true;
     } catch (error) {
@@ -101,30 +105,33 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-  // 6) WebSocket setup
  connectSocket: () => {
-  const { authUser, socket: existing } = get();
-  if (!authUser || existing) return;
+  const { authUser, socket: existing } = get()
+  if (!authUser || existing) return
 
-  const base = import.meta.env.VITE_API_URL.replace(/\/$/, "");
-  const wsUrl = base.replace(/^http/, "ws");
-  const fullUrl = `${wsUrl}/ws?userId=${authUser._id}`;
-  console.log("👉 Opening WS:", fullUrl);
+  // parse your API base so you never include a path or trailing slash
+  const apiUrl = import.meta.env.VITE_API_URL      // e.g. "https://chatnest-49i2.onrender.com"
+  const { host, protocol } = new URL(apiUrl)
 
-  const socket = new WebSocket(fullUrl);
+  // pick ws:// vs wss://
+  const wsProto = protocol === "https:" ? "wss:" : "ws:"
+  const wsUrl   = `${wsProto}//${host}/ws?userId=${authUser._id}`
 
-  socket.onopen = () => console.log("✅ WS open");
-  socket.onerror = (err) => console.error("❌ WS error", err);
-  socket.onclose = () => console.log("⚠️ WS closed");
-  socket.addEventListener("message", ({ data }) => {
-    console.log("⬅️ WS message:", data);
-    const { event: type, data: payload } = JSON.parse(data);
-    if (type === "getOnlineUsers") set({ onlineUsers: payload });
-    if (type === "newMessage") useChatStore.getState().handleIncomingMessage(payload);
-  });
+  console.log("👉 Opening WS:", wsUrl)
+  const socket = new WebSocket(wsUrl)
 
-  set({ socket });
+  socket.onopen    = () => console.log("✅ WS open")
+  socket.onerror   = e => console.error("❌ WS error", e)
+  socket.onclose   = () => console.log("⚠️ WS closed")
+  socket.onmessage = ({ data }) => {
+    const { event, data: payload } = JSON.parse(data)
+    if (event === "getOnlineUsers") set({ onlineUsers: payload })
+    if (event === "newMessage") useChatStore.getState().handleIncomingMessage(payload)
+  }
+
+  set({ socket })
 },
+
 
   disconnectSocket: () => {
     const socket = get().socket;
