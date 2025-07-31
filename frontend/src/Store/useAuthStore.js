@@ -22,7 +22,7 @@ export const useAuthStore = create((set, get) => ({
       u._id = u.id;    // add Mongo‑style alias
 
       set({ authUser: u });
-      get().connectSocket();
+     // get().connectSocket();
     } catch (error) {
       console.log("error in checkAuth:", error);
       set({ authUser: null });
@@ -38,7 +38,7 @@ export const useAuthStore = create((set, get) => ({
       const res = await axiosInstance.post("/signup", data, { withCredentials: true });
       set({ authUser: res.data });
       toast.success("Account Created Successfully");
-      get().connectSocket();
+    //  get().connectSocket();
       return true;
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
@@ -64,7 +64,7 @@ export const useAuthStore = create((set, get) => ({
 
 
       toast.success("Logged in successfully");
-      get().connectSocket();
+    //  get().connectSocket();
       return true;
     } catch (error) {
       console.error("login failed:", error);
@@ -81,7 +81,7 @@ export const useAuthStore = create((set, get) => ({
       await axiosInstance.post("/logout", {}, { withCredentials: true });
       set({ authUser: null });
       toast.success("Logged out successfully");
-      get().disconnectSocket();
+      //get().disconnectSocket();
     } catch (error) {
       toast.error(error.response?.data?.message || error.message);
     }
@@ -105,32 +105,32 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
- connectSocket: () => {
-  const { authUser, socket: existing } = get()
-  if (!authUser || existing) return
+  connectSocket: () => {
+    const { authUser, socket: existing } = get()
+    if (!authUser || existing) return
 
-  // parse your API base so you never include a path or trailing slash
-  const apiUrl = import.meta.env.VITE_API_URL      // e.g. "https://chatnest-49i2.onrender.com"
-  const { host, protocol } = new URL(apiUrl)
+    // parse your API base so you never include a path or trailing slash
+    const apiUrl = import.meta.env.VITE_API_URL || window.location.origin     // e.g. "https://chatnest-49i2.onrender.com"
+    const { host, protocol } = new URL(apiUrl)
 
-  // pick ws:// vs wss://
-  const wsProto = protocol === "https:" ? "wss:" : "ws:"
-  const wsUrl   = `${wsProto}//${host}/ws?userId=${authUser._id}`
+    // pick ws:// vs wss://
+    const wsProto = protocol === "https:" ? "wss:" : "ws:"
+    const wsUrl = `${wsProto}//${host}/ws?userId=${authUser._id}`
 
-  console.log("👉 Opening WS:", wsUrl)
-  const socket = new WebSocket(wsUrl)
+    console.log("👉 Opening WS:", wsUrl)
+    const socket = new WebSocket(wsUrl)
 
-  socket.onopen    = () => console.log("✅ WS open")
-  socket.onerror   = e => console.error("❌ WS error", e)
-  socket.onclose   = () => console.log("⚠️ WS closed")
-  socket.onmessage = ({ data }) => {
-    const { event, data: payload } = JSON.parse(data)
-    if (event === "getOnlineUsers") set({ onlineUsers: payload })
-    if (event === "newMessage") useChatStore.getState().handleIncomingMessage(payload)
-  }
+    socket.onopen = () => console.log("✅ WS open")
+    socket.onerror = e => console.error("❌ WS error", e)
+    socket.onclose = () => console.log("⚠️ WS closed")
+    socket.onmessage = ({ data }) => {
+      const { event, data: payload } = JSON.parse(data)
+      if (event === "getOnlineUsers") set({ onlineUsers: payload })
+      if (event === "newMessage") useChatStore.getState().handleIncomingMessage(payload)
+    }
 
-  set({ socket })
-},
+    set({ socket })
+  },
 
 
   disconnectSocket: () => {
