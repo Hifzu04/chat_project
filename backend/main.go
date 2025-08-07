@@ -16,34 +16,26 @@ import (
 )
 
 var (
-	   upgrader = websocket.Upgrader{
-        CheckOrigin: func(r *http.Request) bool { return true },
-    }
+	upgrader = websocket.Upgrader{
+		CheckOrigin: func(r *http.Request) bool { return true },
+	}
 
 	clients   = map[string]*websocket.Conn{} // userID → WS conn
 	clientsMu sync.Mutex
 )
 
 func init() {
-	// Load .env in local development; in production Render injects real env vars
 	_ = godotenv.Load()
-
 }
 
 func main() {
-	// Connect to MongoDB
 	config.ConnectDB()
 
-	// Register REST API
 	apiMux := http.NewServeMux()
 	apiMux.Handle("/", routes.RegisterRoutes())
-
-	// Register WebSocket endpoint under /ws
 	apiMux.HandleFunc("/ws", wsHandler)
 
-	// Wrap everything in CORS
 	frontendURL := os.Getenv("FRONTEND_URL")
-
 	handler := cors.New(cors.Options{
 		AllowedOrigins:   []string{frontendURL},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
@@ -51,58 +43,72 @@ func main() {
 		AllowCredentials: true,
 	}).Handler(apiMux)
 
-	// Determine port (Render provides $PORT)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8000"
 	}
 	fmt.Printf("Server listening on port %s\n", port)
-	fmt.Println("PORT from env:", port)
 	fmt.Println("FRONTEND_URL from env:", frontendURL)
 
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.URL.Query().Get("userId")
 	if userID == "" {
+		log.Println("❌ wsHandler: missing userId in query")
 		http.Error(w, "userId required", http.StatusBadRequest)
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("WS upgrade error:", err)
+		log.Println("❌ wsHandler: Upgrade error:", err)
 		return
 	}
+	log.Printf("🔴 [WS] connection established for userID=%s\n", userID)
 
-	// Register user and broadcast updated online list
+	// Register
 	clientsMu.Lock()
 	clients[userID] = conn
-	broadcast("getOnlineUsers", currentUsers())
 	clientsMu.Unlock()
+	log.Printf("🔴 [WS] clients after register: %v\n", keys(clients))
+
+	// Broadcast getOnlineUsers
+	users := currentUsers()
+	log.Printf("🔴 [WS] broadcasting getOnlineUsers: %v\n", users)
+	broadcast("getOnlineUsers", users)
 
 	// Clean up on disconnect
 	defer func() {
 		clientsMu.Lock()
 		delete(clients, userID)
-		broadcast("getOnlineUsers", currentUsers())
 		clientsMu.Unlock()
+		after := currentUsers()
+		log.Printf("🔴 [WS] after unregister, currentUsers: %v\n", after)
+		broadcast("getOnlineUsers", after)
 		conn.Close()
 	}()
 
-	// Listen for incoming WS messages
+	// Read loop
 	for {
 		var msg struct {
 			Event string                 `json:"event"`
 			Data  map[string]interface{} `json:"data"`
 		}
 		if err := conn.ReadJSON(&msg); err != nil {
+			log.Printf("⚠️ ReadJSON closed for %s: %v\n", userID, err)
 			break
 		}
+		log.Printf("📨 received WS event=%s data=%v\n", msg.Event, msg.Data)
+
 		if msg.Event == "sendMessage" {
-			to := msg.Data["receiver_id"].(string)
+			to, ok := msg.Data["receiver_id"].(string)
+			if !ok {
+				log.Printf("❌ malformed sendMessage payload: %v\n", msg.Data)
+				continue
+			}
+			log.Printf("🔴 sendMessage → to=%s payload=%v\n", to, msg.Data)
 			sendTo(to, "newMessage", msg.Data)
 		}
 	}
@@ -111,7 +117,6 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 func currentUsers() []string {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
-
 	ids := make([]string, 0, len(clients))
 	for id := range clients {
 		ids = append(ids, id)
@@ -122,12 +127,13 @@ func currentUsers() []string {
 func broadcast(event string, payload interface{}) {
 	clientsMu.Lock()
 	defer clientsMu.Unlock()
-
-	for _, c := range clients {
-		_ = c.WriteJSON(map[string]interface{}{
+	for uid, c := range clients {
+		if err := c.WriteJSON(map[string]interface{}{
 			"event": event,
 			"data":  payload,
-		})
+		}); err != nil {
+			log.Printf("❌ write to %s error: %v\n", uid, err)
+		}
 	}
 }
 
@@ -135,12 +141,22 @@ func sendTo(userID, event string, payload interface{}) {
 	clientsMu.Lock()
 	c, ok := clients[userID]
 	clientsMu.Unlock()
-
 	if !ok {
+		log.Printf("⚠️ sendTo: no client for userID=%s\n", userID)
 		return
 	}
-	_ = c.WriteJSON(map[string]interface{}{
+	if err := c.WriteJSON(map[string]interface{}{
 		"event": event,
 		"data":  payload,
-	})
+	}); err != nil {
+		log.Printf("❌ sendTo write error for %s: %v\n", userID, err)
+	}
+}
+
+func keys(m map[string]*websocket.Conn) []string {
+	ks := make([]string, 0, len(m))
+	for k := range m {
+		ks = append(ks, k)
+	}
+	return ks
 }

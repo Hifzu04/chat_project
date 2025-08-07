@@ -7,15 +7,16 @@ import { Users } from "lucide-react";
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
   const { onlineUsers, authUser } = useAuthStore();
+  console.log(onlineUsers);
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
-    const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
   // 1) Exclude yourself from every list
- const otherUsers = users.filter(u => u._id !== authUser?._id);
+  const otherUsers = users.filter(u => u._id !== authUser?._id);
 
 
   // 2) Determine which of those are online
@@ -26,7 +27,7 @@ const Sidebar = () => {
 
 
   //search user
-    const filtered = displayed.filter(u =>
+  const filtered = displayed.filter(u =>
     u.fullname.toLowerCase().includes(searchTerm.trim().toLowerCase())
   );
 
