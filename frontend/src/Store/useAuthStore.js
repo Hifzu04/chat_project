@@ -72,6 +72,8 @@ export const useAuthStore = create((set, get) => ({
     //console.log("🧪 connectSocket() called. authUser:", authUser, "existing socket:", !!existing);
     if (!authUser || existing) return;
 
+
+    //for loacl host remove comment and commet the line 80-83
     // const wsUrl = `ws://localhost:8000/ws?userId=${authUser._id}`;
     // console.log("👉 Opening WS:", wsUrl);
 
