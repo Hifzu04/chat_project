@@ -20,7 +20,7 @@ export default function App() {
   const {theme} = useThemeStore();
   //  const { theme } = useThemeStore();
 
-  console.log(onlineUsers);
+  //console.log(onlineUsers);
 
 
   //when we will refresh the page , checkAuth will check whether user is loggedIn. 

@@ -56,7 +56,7 @@ func main() {
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("userId")
 	if userID == "" {
-		log.Println("❌ wsHandler: missing userId in query")
+		//	log.Println("❌ wsHandler: missing userId in query")
 		http.Error(w, "userId required", http.StatusBadRequest)
 		return
 	}
@@ -66,7 +66,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 		log.Println("❌ wsHandler: Upgrade error:", err)
 		return
 	}
-	log.Printf("🔴 [WS] connection established for userID=%s\n", userID)
+	//	log.Printf("🔴 [WS] connection established for userID=%s\n", userID)
 
 	// Register
 	clientsMu.Lock()
@@ -76,7 +76,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Broadcast getOnlineUsers
 	users := currentUsers()
-	log.Printf("🔴 [WS] broadcasting getOnlineUsers: %v\n", users)
+	//log.Printf("🔴 [WS] broadcasting getOnlineUsers: %v\n", users)
 	broadcast("getOnlineUsers", users)
 
 	// Clean up on disconnect
@@ -97,10 +97,10 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			Data  map[string]interface{} `json:"data"`
 		}
 		if err := conn.ReadJSON(&msg); err != nil {
-			log.Printf("⚠️ ReadJSON closed for %s: %v\n", userID, err)
+			//	log.Printf("⚠️ ReadJSON closed for %s: %v\n", userID, err)
 			break
 		}
-		log.Printf("📨 received WS event=%s data=%v\n", msg.Event, msg.Data)
+		//log.Printf("📨 received WS event=%s data=%v\n", msg.Event, msg.Data)
 
 		if msg.Event == "sendMessage" {
 			to, ok := msg.Data["receiver_id"].(string)
@@ -108,7 +108,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 				log.Printf("❌ malformed sendMessage payload: %v\n", msg.Data)
 				continue
 			}
-			log.Printf("🔴 sendMessage → to=%s payload=%v\n", to, msg.Data)
+			//log.Printf("🔴 sendMessage → to=%s payload=%v\n", to, msg.Data)
 			sendTo(to, "newMessage", msg.Data)
 		}
 	}
@@ -142,7 +142,7 @@ func sendTo(userID, event string, payload interface{}) {
 	c, ok := clients[userID]
 	clientsMu.Unlock()
 	if !ok {
-		log.Printf("⚠️ sendTo: no client for userID=%s\n", userID)
+		//log.Printf("⚠️ sendTo: no client for userID=%s\n", userID)
 		return
 	}
 	if err := c.WriteJSON(map[string]interface{}{

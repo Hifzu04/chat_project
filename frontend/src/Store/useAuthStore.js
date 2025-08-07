@@ -69,7 +69,7 @@ export const useAuthStore = create((set, get) => ({
 
   connectSocket: () => {
     const { authUser, socket: existing } = get();
-    console.log("🧪 connectSocket() called. authUser:", authUser, "existing socket:", !!existing);
+    //console.log("🧪 connectSocket() called. authUser:", authUser, "existing socket:", !!existing);
     if (!authUser || existing) return;
 
     // const wsUrl = `ws://localhost:8000/ws?userId=${authUser._id}`;
@@ -88,7 +88,7 @@ export const useAuthStore = create((set, get) => ({
     socket.onclose = () => console.log("⚠️ WS closed");
 
     socket.onmessage = ({ data }) => {
-      console.log("📨 raw message:", data);
+     // console.log("📨 raw message:", data);
       let parsed;
       try {
         parsed = JSON.parse(data);
@@ -96,7 +96,7 @@ export const useAuthStore = create((set, get) => ({
         return console.error("❌ WS parse error:", err, data);
       }
       const { event, data: payload } = parsed;
-      console.log("🟦 WS event:", event, "payload:", payload);
+     // console.log("🟦 WS event:", event, "payload:", payload);
 
       if (event === "getOnlineUsers") {
         console.log("🟩 setting onlineUsers to:", payload);
