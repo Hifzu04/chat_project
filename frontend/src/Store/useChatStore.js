@@ -40,7 +40,7 @@ export const useChatStore = create((set, get) => ({
     const { messages } = get();
     try {
       const res = await axiosInstance.post("/messages/send", formData, {
-       // headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
       const messagePayload = res.data;
