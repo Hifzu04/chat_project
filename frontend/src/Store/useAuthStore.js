@@ -73,14 +73,14 @@ export const useAuthStore = create((set, get) => ({
     if (!authUser || existing) return;
 
 
-    //for loacl host remove comment and commet the line 80-83
-    // const wsUrl = `ws://localhost:8000/ws?userId=${authUser._id}`;
-    // console.log("👉 Opening WS:", wsUrl);
+    // for loacl host remove comment and commet the line 80-83
+  //  const wsUrl = `ws://localhost:8000/ws?userId=${authUser._id}`;
+   // console.log("👉 Opening WS:", wsUrl);
 
-    const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
-    const { host, protocol } = new URL(apiUrl);
-    const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${wsProtocol}//${host}/ws?userId=${authUser._id}`;
+     const apiUrl = import.meta.env.VITE_API_URL || window.location.origin;
+     const { host, protocol } = new URL(apiUrl);
+     const wsProtocol = protocol === "https:" ? "wss:" : "ws:";
+     const wsUrl = `${wsProtocol}//${host}/ws?userId=${authUser._id}`;
 
 
     const socket = new WebSocket(wsUrl);
@@ -90,7 +90,7 @@ export const useAuthStore = create((set, get) => ({
     socket.onclose = () => console.log("⚠️ WS closed");
 
     socket.onmessage = ({ data }) => {
-     // console.log("📨 raw message:", data);
+      // console.log("📨 raw message:", data);
       let parsed;
       try {
         parsed = JSON.parse(data);
@@ -98,7 +98,7 @@ export const useAuthStore = create((set, get) => ({
         return console.error("❌ WS parse error:", err, data);
       }
       const { event, data: payload } = parsed;
-     // console.log("🟦 WS event:", event, "payload:", payload);
+      // console.log("🟦 WS event:", event, "payload:", payload);
 
       if (event === "getOnlineUsers") {
         console.log("🟩 setting onlineUsers to:", payload);

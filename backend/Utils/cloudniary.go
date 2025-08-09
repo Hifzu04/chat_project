@@ -11,9 +11,9 @@ import (
 )
 
 func UploadToCloudinary(file multipart.File, fileHeader *multipart.FileHeader) (string, error) {
-	cloudName := os.Getenv("CLOUDNIARY_CLOUDNAME")
-	apiKey := os.Getenv("CLOUDNIARY_APIKEYS")
-	apiSecret := os.Getenv("CLOUDNIARY_APISECRET")
+	cloudName := os.Getenv("CLOUDINARY_CLOUD_NAME")
+	apiKey := os.Getenv("CLOUDINARY_API_KEY")
+	apiSecret := os.Getenv("CLOUDINARY_API_SECRET")
 
 	cld, err := cloudinary.NewFromParams(cloudName, apiKey, apiSecret)
 	if err != nil {
