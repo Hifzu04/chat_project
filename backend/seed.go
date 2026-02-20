@@ -63,7 +63,8 @@ func seedUsers() {
 	fmt.Println("✅ User seed complete")
 }
 
-// init runs before main; if SEED_DB=true, seed and exit.
+// init runs before main;
+// It will only seed the database if you explicitly tell it to by setting SEED_DB=true.
 func init() {
 	if os.Getenv("SEED_DB") == "true" {
 		config.ConnectDB()

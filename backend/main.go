@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sync"
 
 	"github.com/gorilla/websocket"
 	"github.com/joho/godotenv"
@@ -13,15 +12,14 @@ import (
 
 	config "chat-backend/Config"
 	routes "chat-backend/Routes"
+	utils "chat-backend/Utils"
 )
 
 var (
+	//upgrader: This object is responsible for "upgrading" a standard HTTP request to a WebSocket connection.
 	upgrader = websocket.Upgrader{
 		CheckOrigin: func(r *http.Request) bool { return true },
 	}
-
-	clients   = map[string]*websocket.Conn{} // userID → WS conn
-	clientsMu sync.Mutex
 )
 
 func init() {
@@ -29,10 +27,18 @@ func init() {
 }
 
 func main() {
+	//config.ConnectDB(): Calls the function in your local config package to connect to MongoDB.
 	config.ConnectDB()
-
+	//http.NewServeMux(): Creates a new HTTP Request Multiplexer (router).
 	apiMux := http.NewServeMux()
+	apiMux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("Server is awake!"))
+	})
+	//apiMux.Handle("/", ...): Any request starting with / (standard API calls like Login/Signup) is passed to the routes package.
 	apiMux.Handle("/", routes.RegisterRoutes())
+	//apiMux.HandleFunc("/ws", wsHandler): Any request to the specific endpoint /ws is handled by
+	// the wsHandler function defined further down in this file.
 	apiMux.HandleFunc("/ws", wsHandler)
 
 	frontendURL := os.Getenv("FRONTEND_URL")
@@ -47,46 +53,54 @@ func main() {
 	if port == "" {
 		port = "8000"
 	}
+
 	fmt.Printf("Server listening on port %s\n", port)
+
 	fmt.Println("FRONTEND_URL from env:", frontendURL)
 
+	//log.Fatal(...): This wraps the server start.
+
+	//  If the server crashes (e.g., port already in use), it logs the error and exits the program immediately.
+
 	log.Fatal(http.ListenAndServe(":"+port, handler))
+
 }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	userID := r.URL.Query().Get("userId")
 	if userID == "" {
-		//	log.Println("❌ wsHandler: missing userId in query")
+		//	log.Println(" wsHandler: missing userId in query")
 		http.Error(w, "userId required", http.StatusBadRequest)
 		return
 	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Println("❌ wsHandler: Upgrade error:", err)
+		log.Println("wsHandler: Upgrade error:", err)
 		return
 	}
-	//	log.Printf("🔴 [WS] connection established for userID=%s\n", userID)
+	//log.Printf(" [WS] connection established for userID=%s\n", userID)
 
-	// Register
-	clientsMu.Lock()
-	clients[userID] = conn
-	clientsMu.Unlock()
-	log.Printf("🔴 [WS] clients after register: %v\n", keys(clients))
+	//pause other goroutine
+	utils.ClientsMu.Lock()
+	//Register: We map the userID to this specific conn.
+	utils.Clients[userID] = conn
+	utils.ClientsMu.Unlock()
+	//log.Printf(" [WS] clients after register: %v\n", keys(utils.Clients))
 
-	// Broadcast getOnlineUsers
-	users := currentUsers()
-	//log.Printf("🔴 [WS] broadcasting getOnlineUsers: %v\n", users)
-	broadcast("getOnlineUsers", users)
+	//currentUsers(): Gets a list of all User IDs currently in the map.
+	//broadcast(...): Sends this list to everyone connected. This allows the frontend to show a green dot next to online friends immediately.
+	users := utils.CurrentUsers()
+	//log.Printf("[WS] broadcasting getOnlineUsers: %v\n", users)
+	utils.Broadcast("getOnlineUsers", users)
 
 	// Clean up on disconnect
 	defer func() {
-		clientsMu.Lock()
-		delete(clients, userID)
-		clientsMu.Unlock()
-		after := currentUsers()
-		log.Printf("🔴 [WS] after unregister, currentUsers: %v\n", after)
-		broadcast("getOnlineUsers", after)
+		utils.ClientsMu.Lock()
+		delete(utils.Clients, userID)
+		utils.ClientsMu.Unlock()
+		after := utils.CurrentUsers()
+		utils.Broadcast("getOnlineUsers", after)
 		conn.Close()
 	}()
 
@@ -97,66 +111,22 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 			Data  map[string]interface{} `json:"data"`
 		}
 		if err := conn.ReadJSON(&msg); err != nil {
-			//	log.Printf("⚠️ ReadJSON closed for %s: %v\n", userID, err)
+			//	log.Printf("ReadJSON closed for %s: %v\n", userID, err)
 			break
 		}
-		//log.Printf("📨 received WS event=%s data=%v\n", msg.Event, msg.Data)
+		//log.Printf(" received WS event=%s data=%v\n", msg.Event, msg.Data)
 
 		if msg.Event == "sendMessage" {
 			to, ok := msg.Data["receiver_id"].(string)
 			if !ok {
-				log.Printf("❌ malformed sendMessage payload: %v\n", msg.Data)
+				log.Printf(" malformed sendMessage payload: %v\n", msg.Data)
 				continue
 			}
-			//log.Printf("🔴 sendMessage → to=%s payload=%v\n", to, msg.Data)
-			sendTo(to, "newMessage", msg.Data)
+			//log.Printf(" sendMessage → to=%s payload=%v\n", to, msg.Data)
+			//Routing Logic:
+			//If the event is "sendMessage", it extracts the receiver_id.
+			//It then calls sendTo to forward that message to the specific target user.
+			utils.SendTo(to, "newMessage", msg.Data)
 		}
 	}
-}
-
-func currentUsers() []string {
-	clientsMu.Lock()
-	defer clientsMu.Unlock()
-	ids := make([]string, 0, len(clients))
-	for id := range clients {
-		ids = append(ids, id)
-	}
-	return ids
-}
-
-func broadcast(event string, payload interface{}) {
-	clientsMu.Lock()
-	defer clientsMu.Unlock()
-	for uid, c := range clients {
-		if err := c.WriteJSON(map[string]interface{}{
-			"event": event,
-			"data":  payload,
-		}); err != nil {
-			log.Printf("❌ write to %s error: %v\n", uid, err)
-		}
-	}
-}
-
-func sendTo(userID, event string, payload interface{}) {
-	clientsMu.Lock()
-	c, ok := clients[userID]
-	clientsMu.Unlock()
-	if !ok {
-		//log.Printf("⚠️ sendTo: no client for userID=%s\n", userID)
-		return
-	}
-	if err := c.WriteJSON(map[string]interface{}{
-		"event": event,
-		"data":  payload,
-	}); err != nil {
-		log.Printf("❌ sendTo write error for %s: %v\n", userID, err)
-	}
-}
-
-func keys(m map[string]*websocket.Conn) []string {
-	ks := make([]string, 0, len(m))
-	for k := range m {
-		ks = append(ks, k)
-	}
-	return ks
 }

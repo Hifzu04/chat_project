@@ -23,6 +23,27 @@ type Message struct {
 }
 
 
-
-// CollectionNameMessage is the MongoDB collection name for chat messages.
+// CollectionNameMessage is the MongoDB collection(table) name for chat messages.
 const CollectionNameMessage = "messages"
+
+
+//concept of omit empty 
+/*
+
+eg  Text       string               `bson:"text,omitempty" json:"text,omitempty"`
+when  there's no omitempty
+{
+  "id": "124",
+  "text": "",      // <--- Useless junk!
+  "images": ["photo.jpg"]
+}
+
+with omitempty
+{
+  "id": "123",
+  "text": "Hello"
+  // "images" key is completely gone
+}
+
+
+*/
