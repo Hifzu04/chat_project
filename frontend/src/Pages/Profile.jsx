@@ -9,7 +9,10 @@ function Profile() {
 
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file) {
+      console.log("No file selected");
+      return;
+    }
 
     // 1) keep a preview URL
     const previewURL = URL.createObjectURL(file);
@@ -21,15 +24,17 @@ function Profile() {
 
     // 3) call store with FormData
     await updateProfile(form);
+    console.log("Profile picture updated");
 
   }
-  // console.log(authUser.profile_pic);
+
 
 
   return (
     <div className='h-screen pt-20'>
-      <div className='max-w-2xl mx-auto p-4 py-8'>
-        <div className="bg-base-300 rounded-xl p-6 space-y-8">
+      {/* mx-auto: on block elements (like divs), you can use margin auto to center them horizontally within their parent container. */}
+      <div className='max-w-3xl mx-auto  p-4 py-8'>
+        <div className="bg-base-300 rounded-xl p-8 space-y-8">
           <div className='text-center'>
             <h1 className='text-2xl font-semibold'>Profile</h1>
             <p className='mt-2'>Your profile information</p>
@@ -43,7 +48,7 @@ function Profile() {
                 //checkfordebugging .profilepic
                 src={selectedImage || authUser.profile_pic || "/avatar.png"}
                 alt='profilepic'
-                className='rounded-full border-4  object-cover size-32  '
+                className='rounded-full border-3 object-cover size-40  '
               />
               <label
                 htmlFor="avatar-upload"
@@ -66,7 +71,7 @@ function Profile() {
                 />
               </label>
             </div>
-            <p className='text-sm text-zinc-500'>{isUpdatingProfile ? "uploading..." : "Click on camera to upload your profile."}</p>
+            <p className='text-md text-zinc-500'>{isUpdatingProfile ? "uploading your profile..." : "Click on camera to update your profile."}</p>
           </div>
 
           {/* info section */}
@@ -87,6 +92,7 @@ function Profile() {
               <p className='border rounded-lg py-2 px-5 bg-base-200 text-zinc-500 '>{authUser?.email || "huhhh..Your email?? think about it man"}</p>
             </div>
           </div>
+
 
           <div className='mt-6 bg-base-200 rounded-xl p-6'>
             <h2 className='text-lg font-medium mb-4 '>Account Information</h2>

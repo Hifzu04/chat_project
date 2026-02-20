@@ -17,8 +17,19 @@ function Login() {
         else toast.error('Login failed')
     }
 
+    const handleClickguest = async (e) => {
+        e.preventDefault()
+
+        const success = await login({ email: 'guest@gmail.com', password: 'guest123' })
+        if (success) {
+            toast.success('Logged in as guest')
+            navigate('/')
+        }
+        else toast.error('Failed to login as guest')
+    }
+
     return (
-        <div className="min-h-screen flex flex-col-reverse md:flex-row">
+        <div className="min-h-screen flex  md:flex-row">
             {/* Left / Form Panel */}
             <div className="w-full md:w-1/2 flex items-center justify-center py-12 px-4 sm:px-6 md:px-8 bg-base-300">
                 <div className="w-full max-w-md space-y-6">
@@ -101,7 +112,7 @@ function Login() {
                         <button
                             type="submit"
                             disabled={isLoggingin}
-                            className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm bg-indigo-600 text-base-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            className="w-full flex items-center justify-center py-2 px-4 border border-indigo-600 rounded-lg shadow-sm text-indigo-600 bg-transparent hover:bg-indigo-50 hover:border-indigo-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
                         >
                             {isLoggingin ? (
                                 <>
@@ -114,8 +125,19 @@ function Login() {
                         </button>
                     </form>
 
+
+                    <div className='divider text-sm text-center text-base-content/60 my-4'>OR</div>
+                    <button type="button"
+                        disabled={isLoggingin}
+
+                        className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm bg-indigo-600 text-base-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                        onClick={handleClickguest}
+
+                    >Sign in as guest</button>
+
+
                     <p className="mt-4 text-center text-sm">
-                        New to ChatterNest?{' '}
+                        New to ChatNest?{' '}
                         <Link
                             to="/signup"
                             className="font-medium text-indigo-600 hover:text-indigo-500"
@@ -127,9 +149,9 @@ function Login() {
             </div>
 
             {/* Right / Promo Panel */}
-            <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8">
+            <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-800 text-white p-8">
                 <div className="max-w-lg text-center space-y-6">
-                    <h1 className="text-5xl font-bold">ChatterNest</h1>
+                    <h1 className="text-5xl font-bold">ChatNest</h1>
                     <p className="text-lg italic">
                         “Pop in, say hi, and keep the convo rolling!” ☕💬
                     </p>

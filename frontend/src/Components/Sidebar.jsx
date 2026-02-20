@@ -7,16 +7,17 @@ import { Users } from "lucide-react";
 const Sidebar = () => {
   const { getUsers, users, selectedUser, setSelectedUser, isUsersLoading } = useChatStore();
   const { onlineUsers, authUser } = useAuthStore();
- // console.log(onlineUsers);
+  // console.log(onlineUsers);
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
-
+  //users: The raw list of all registered users from the database.
   // 1) Exclude yourself from every list
   const otherUsers = users.filter(u => u._id !== authUser?._id);
+
 
 
   // 2) Determine which of those are online
@@ -64,17 +65,17 @@ const Sidebar = () => {
             />
             <span className="text-sm">Show online only</span>
           </label>
-          <span className="text-xs text-zinc-500">({onlineOthers.length} online)</span>
+          <span className="text-xs mt-1 text-zinc-500">({onlineOthers.length} online)</span>
         </div>
       </div>
-
+      {/* //overflow-y-auto: If you have 100 users, this section scrolls while the Header stays fixed at the top. */}
       <div className="overflow-y-auto w-full py-3">
         {filtered.map((user) => (
           <button
             key={user._id}
             onClick={() => setSelectedUser(user)}
             className={`
-              w-full p-3 flex items-center gap-3
+              w-full p-3 flex items-center gap-3 
               hover:bg-base-300 transition-colors
               ${selectedUser?._id === user._id ? "bg-base-300 ring-1 ring-base-300" : ""}
             `}

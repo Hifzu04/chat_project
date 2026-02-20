@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2 } from 'lucide-react'          //A library for icons.
 import { Link } from 'react-router-dom'
-import toast, { Toaster } from 'react-hot-toast'
+import toast, { Toaster } from 'react-hot-toast'        //toast: Used to pop up error messages (e.g., "Password too short").
 import { useAuthStore } from '../Store/useAuthStore'
 
 export default function Signup() {
@@ -11,14 +11,20 @@ export default function Signup() {
     email: '',
     password: '',
   })
-  const { signup, isSigningup } = useAuthStore()
 
+  //Destructuring assignment to extract signup function and isSigningup state from the useAuthStore hook(Global zustand hook).
+  const { signup, isSigningup, login, isLoggingin } = useAuthStore()
+
+
+  //Validation Logic
   const validateForm = () => {
+
+    //trim(): Removes spaces from the start/end. Prevents users from submitting a name that is just empty spaces
     if (!formData.fullname.trim())
       return toast.error('Full name is required')
     if (!formData.email.trim()) return toast.error('Email is required')
     if (!/\S+@\S+\.\S+/.test(formData.email))
-      return toast.error('Invalid email address')
+      return toast.error('Invalid email address, please enter a valid one')
     if (!formData.password.trim())
       return toast.error('Password is required')
     if (formData.password.length < 6)
@@ -27,12 +33,25 @@ export default function Signup() {
   }
 
   const handleSubmit = e => {
-    e.preventDefault()
+    e.preventDefault()           //1. Stop page reload
     if (validateForm()) signup(formData)
+    else toast.error('Some fields are invalid.')
+  }
+
+  const handleClickguest = async (e) => {
+    e.preventDefault()
+
+    const success = await login({ email: 'guest@gmail.com', password: 'guest123' })
+    if (success) {
+      toast.success('Logged in as guest')
+      navigate('/')
+    }
+    else toast.error('Failed to login as guest')
   }
 
   return (
-    <div className="min-h-screen flex flex-col-reverse md:flex-row">
+    //md:flex-row: Tablet/Desktop. On medium screens and up, switch to a horizontal row (Form Left, Promo Right).
+    <div className="min-h-screen flex  md:flex-row">
       {/* Form Panel */}
       <div className="w-full md:w-1/2 flex items-center justify-center py-12 px-4 sm:px-6 md:px-8 bg-base-200">
         <div className="w-full max-w-md space-y-6">
@@ -41,13 +60,13 @@ export default function Signup() {
             <img
               src="/Meetme.png"
               alt="App Logo"
-              className="h-10 w-auto sm:h-12"
+              className="h-10 w-auto sm:h-16"
             />
           </div>
 
           {/* Heading */}
           <h2 className="text-center text-2xl sm:text-3xl md:text-4xl font-extrabold">
-            Create your account
+            Create Your Account
           </h2>
 
           {/* Form */}
@@ -138,6 +157,15 @@ export default function Signup() {
             </button>
           </form>
 
+          <div className='divider text-sm text-center text-base-content/60 my-4'>OR</div>
+          <button type="button"
+            disabled={isLoggingin}
+
+            className="w-full flex items-center justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm bg-indigo-600 text-base-300 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onClick={handleClickguest}
+
+          >Sign in as guest</button>
+
           {/* Link to login */}
           <p className="mt-4 text-center text-sm">
             Already registered?{' '}
@@ -152,9 +180,9 @@ export default function Signup() {
       </div>
 
       {/* Promo Panel */}
-      <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-8">
+      <div className="hidden md:flex w-1/2 items-center justify-center bg-gradient-to-br from-indigo-500 to-purple-700 text-white p-8">
         <div className="max-w-lg text-center space-y-6">
-          <h1 className="text-5xl font-bold">ChatterNest</h1>
+          <h1 className="text-5xl font-bold">ChatNest</h1>
           <p className="text-lg italic">
             “Pop in, say hi, and keep the convo rolling!” ☕💬
           </p>
