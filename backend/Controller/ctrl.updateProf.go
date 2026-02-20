@@ -25,11 +25,15 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 2) parse multipart
+	// 2)  ParseMultipartForm: Standard JSON requests cannot carry image data. We use Multipart Form Data.
+	//5 << 20: This is a bitwise operation that equals 5 MB (5 * 1024 * 1024).
 	if err := r.ParseMultipartForm(5 << 20); err != nil {
+
 		http.Error(w, "could not parse form", http.StatusBadRequest)
 		return
 	}
+
+	// r.FormFile("profilePic"): Looks for the specific file input named "profilePic" coming from the React frontend.
 	file, hdr, err := r.FormFile("profilePic")
 	if err != nil {
 		http.Error(w, "profilePic is required", http.StatusBadRequest)
@@ -37,7 +41,7 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	}
 	defer file.Close()
 
-	// 3) upload
+	// 3) upload to cloudinary
 	secureURL, err := utils.UploadToCloudinary(file, hdr)
 	if err != nil {
 		http.Error(w, "upload failed: "+err.Error(), http.StatusInternalServerError)
@@ -49,8 +53,15 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
+
+	
 	filter := bson.M{"_id": oid}
 	update := bson.M{"$set": bson.M{"profile_pic": secureURL}}
+
+	//SetReturnDocument(options.After): This is the most critical line in this block.
+	//Default Behavior: MongoDB updates the document but returns the OLD version (the one before the update).
+	//options.After: Tells MongoDB: "Update the document, and then give me back the NEW version."
+	//Why? We want to send the new profile picture back to the frontend immediately so the UI updates instantly.
 	opts := options.FindOneAndUpdate().SetReturnDocument(options.After)
 
 	var updatedUser models.User
