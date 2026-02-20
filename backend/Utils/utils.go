@@ -11,7 +11,8 @@ import (
 )
 
 // HashPassword hashes the given plaintext password using bcrypt.
-//
+//Package bcrypt implements Provos and Mazières's bcrypt adaptive hashing algorithm
+
 // It returns the hashed password (as a string) or an error if hashing fails.
 func HashPassword(password string) (string, error) {
 	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
@@ -25,7 +26,8 @@ func HashPassword(password string) (string, error) {
 // It returns true if they match, false otherwise.
 func CheckPasswordHash(password, hashedPassword string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-	return err == nil
+	//CompareHashAndPassword returns nil on success, or an error on failure
+	return err == nil 
 }
 
 // JSONResponse is a helper to write a JSON response with a given status code.

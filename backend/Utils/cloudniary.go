@@ -25,7 +25,7 @@ func UploadToCloudinary(file multipart.File, fileHeader *multipart.FileHeader) (
 		PublicID: fileHeader.Filename,
 	})
 	if err != nil {
-		return "", fmt.Errorf("cloudinary upload error: %v", err)
+		return "", fmt.Errorf("cloudinary upload error form utils/cloudniary.go: %v", err)
 	}
 
 	return uploadResult.SecureURL, nil
