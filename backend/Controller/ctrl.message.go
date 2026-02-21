@@ -262,6 +262,46 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 		SystemInstruction: genai.NewContentFromText("You are NestBot, a friendly and helpful AI assistant inside a chat application. Keep your answers concise, conversational, and under 3 sentences. Do not use complex markdown formatting.", genai.RoleUser),
 	}
 
+	//1. FETCH CHAT HISTORY(last 5) FROM MONGODB 👇 to get old memory
+	oldcollection := config.GetCollection(models.CollectionNameMessage)
+	filter := bson.M{
+		"$or": []bson.M{
+			{"sender_id": user, "receiver_id": botID},
+			{"sender_id": botID, "receiver_id": user},
+		},
+	}
+	//fetch te last 5 messsage (newest first)
+	findOptions := options.Find().SetSort(bson.M{"created_at": -1}).SetLimit(5)
+	cursor, err := oldcollection.Find(ctx, filter, findOptions)
+
+	var dbMessagesArray []models.Message
+	if err == nil {
+		cursor.All(ctx, &dbMessagesArray)
+	}
+
+	//History arrya for GEMINI
+	var GenAIcontentArray []*genai.Content
+	//loop backword so oldest messaage go first
+	for i := len(dbMessagesArray) - 1; i >= 0; i-- {
+		msg := dbMessagesArray[i]
+
+		// Skip the very first message in the list if it's the one the user JUST sent
+		// (We will build this one manually below so we don't lose the image data)
+		if i == 0 && msg.SenderID == user && msg.Text == usertext {
+			continue
+		}
+		
+		if msg.Text != "" &&  msg.SenderID == botID{
+			GenAIcontentArray = append(GenAIcontentArray ,genai.NewContentFromText(msg.Text ,genai.RoleModel))
+
+		}
+		if msg.Text != "" && msg.SenderID== user {
+			GenAIcontentArray = append(GenAIcontentArray ,genai.NewContentFromText(msg.Text ,genai.RoleUser))
+
+		}
+
+	}
+     //for currrent message stored in var named as parts
 	// 1. Create an empty list to hold our text and image parts
 	var parts []*genai.Part
 
@@ -280,7 +320,7 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 		//// Read the pixels
 		imageBytes, err := io.ReadAll(imageResp.Body)
 		imageResp.Body.Close() // ALWAYS close the body to prevent memory leaks
-		
+
 		if err == nil {
 			// Append the image part
 			parts = append(parts, genai.NewPartFromBytes(imageBytes, "image/jpeg"))
@@ -288,20 +328,17 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 
 	}
 
-
 	if len(parts) == 0 {
-        return
-    }
+		return
+	}
+    //// Attach the current message to the end of the history array
+	GenAIcontentArray = append(GenAIcontentArray , genai.NewContentFromParts(parts , genai.RoleUser))
 
-	contents := []*genai.Content{
-        genai.NewContentFromParts(parts, genai.RoleUser),
-    }
-
-	
+    //SEND ENTIRE CONVERSATION(new + last 5 ) TO GEMINI
 	result, err := client.Models.GenerateContent(
 		ctx,
 		"gemini-3-flash-preview",
-		contents,
+		GenAIcontentArray,
 		configofgenAI,
 	)
 	if err != nil {
