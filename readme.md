@@ -1,11 +1,5 @@
 # 📬 ChatNest 
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/Go-Light.svg" width="50" alt="Go" />
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/React-Dark.svg" width="50" alt="React" />
-  <img src="https://raw.githubusercontent.com/tandpfun/skill-icons/main/icons/MongoDB.svg" width="50" alt="MongoDB" />
-</p>
-
 <h3 align="center">High-Performance Real-Time Messaging with AI Intelligence</h3>
 
 <p align="center">
@@ -22,7 +16,6 @@
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?style=for-the-badge&logo=go" />
 </p>
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-Click%20Here-brightgreen?style=for-the-badge&logo=vercel)](https://chatnest-3y2m.onrender.com/)
 
 [![Tech Stack](https://img.shields.io/badge/Stack-Go%20|%20React%20|%20WebSockets%20|%20MongoDB-blueviolet?style=for-the-badge)](#-tech-stack)
 
@@ -32,9 +25,7 @@
 
 ----
 
-## 📸 Features
-
-## 🚀 Key Features
+## 🚀 Key Features      
 
 ### 🧠 The AI Edge (NestMind)
 * **Smart Replies:** Context-aware suggestions that learn from your conversation style.
@@ -70,6 +61,7 @@
 
 ### 🛠 Backend
 - 🐹 **Go (Gorilla Mux)** — REST API + WebSockets
+- 🤖 **Google gemini API** - AI powerd bot assistant 
 - 🔑 **JWT authentication** (httpOnly cookies) & authorization
 - 🍃 **MongoDB**
 - ☁️ **Cloudinary**
@@ -98,27 +90,8 @@
         ▼         ▼              ▼
   ┌──────────┐ ┌──────────┐ ┌──────────────┐
   │ MongoDB  │ │Cloudinary│ │  OpenAI/LLM  │
-  │ (Data)   │ │ (Images) │ │  (NestMind)  │
+  │ (Data)   │ │ (Images) │ │  (Gemini-API)  │
   └──────────┘ └──────────┘ └──────────────┘
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+----
 
 
