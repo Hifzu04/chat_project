@@ -257,7 +257,7 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 		fmt.Println("maybe something is wrong in getting genAI API")
 		return
 	}
-
+   //Created prompt an
 	configofgenAI := &genai.GenerateContentConfig{
 		SystemInstruction: genai.NewContentFromText("You are NestBot, a friendly and helpful AI assistant inside a chat application. Keep your answers concise, conversational, and under 3 sentences. Do not use complex markdown formatting.", genai.RoleUser),
 	}
@@ -270,7 +270,7 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 			{"sender_id": botID, "receiver_id": user},
 		},
 	}
-	//fetch te last 5 messsage (newest first)
+	//fetch te last 5 messsage (newest first) 
 	findOptions := options.Find().SetSort(bson.M{"created_at": -1}).SetLimit(5)
 	cursor, err := oldcollection.Find(ctx, filter, findOptions)
 
@@ -279,7 +279,7 @@ func replyWithAI(user primitive.ObjectID, botID primitive.ObjectID, usertext str
 		cursor.All(ctx, &dbMessagesArray)
 	}
 
-	//History arrya for GEMINI
+	//History array for GEMINI
 	var GenAIcontentArray []*genai.Content
 	//loop backword so oldest messaage go first
 	for i := len(dbMessagesArray) - 1; i >= 0; i-- {
